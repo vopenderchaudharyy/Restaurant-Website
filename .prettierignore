@@ -1,0 +1,11 @@
+node_modules
+client/dist
+client/public
+legacy
+package-lock.json
+.env
+**/.env
+server/.data
+
+.tools/
+server/.mongodb/

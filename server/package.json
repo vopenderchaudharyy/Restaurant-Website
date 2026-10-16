@@ -1,0 +1,22 @@
+{
+  "name": "@menumate/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "test": "node --test",
+    "admin:promote": "node src/scripts/promote-admin.js",
+    "db:start": "node src/scripts/local-db.js",
+    "db:migrate": "node src/scripts/migrate-local.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.8",
+    "express": "^5.3.0",
+    "helmet": "^8.3.0",
+    "mongoose": "^9.11.2",
+    "morgan": "^1.12.1"
+  }
+}
