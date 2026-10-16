@@ -332,14 +332,11 @@ describe('restaurant interactions', () => {
     expect(screen.queryByRole('button', { name: 'Add Grilled Chicken to cart' })).toBeNull();
   });
 
-  it('opens the selected craving category from the home page', async () => {
+  it('opens the selected cuisine from the home page', async () => {
     const { user } = setup('/');
-    await user.click(screen.getByRole('link', { name: /03 \/ TREAT YOURSELF/ }));
-    expect(screen.getByRole('tab', { name: 'Desserts' }).getAttribute('aria-selected')).toBe(
-      'true',
-    );
-    expect(screen.getByRole('button', { name: 'Add Chocolate Lava Cake to cart' })).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Add Margherita Pizza to cart' })).toBeNull();
+    await user.click(screen.getByRole('link', { name: /Desserts/ }));
+    expect(screen.getByRole('button', { name: 'Desserts' }).getAttribute('aria-pressed')).toBe('true');
+    expect(await screen.findByText('No restaurants match just yet.')).toBeTruthy();
   });
 
   it('disables ordering for a sold-out dish', async () => {

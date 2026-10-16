@@ -6,10 +6,11 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "test": "node --test",
+    "test": "node --test test/app.test.js test/persistence.test.js",
     "admin:promote": "node src/scripts/promote-admin.js",
     "db:start": "node src/scripts/local-db.js",
-    "db:migrate": "node src/scripts/migrate-local.js"
+    "db:migrate": "node src/scripts/migrate-local.js",
+    "test:mongo": "node src/scripts/test-mongo.js"
   },
   "dependencies": {
     "cors": "^2.8.6",

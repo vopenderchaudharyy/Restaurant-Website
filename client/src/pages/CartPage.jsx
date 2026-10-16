@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Trash2, ShieldCheck, ShoppingBag } from 'lucide-react';
 import { useStore } from '../context/store.js';
-import { menu, extras, money, itemPrice, totals } from '../../../shared/menu.js';
+import { cartDish, extras, money, itemPrice, totals } from '../../../shared/menu.js';
 import { ButtonLink, Quantity, OrderTotals, EmptyState } from '../components/ui.jsx';
 
 export default function CartPage() {
@@ -29,14 +29,14 @@ export default function CartPage() {
       <div className="checkout-grid">
         <div className="panel cart-panel">
           <div className="panel-heading">
-            <h3>A little happiness, to go</h3>
+            <h3>{cart[0]?.dish?.restaurantName || 'MenuMate Kitchen'}</h3>
             <button className="text-link" onClick={() => setCart([])}>
               Clear all
             </button>
           </div>
           <div>
             {cart.map((item) => {
-              const dish = menu.find((entry) => entry.id === item.dishId);
+              const dish = cartDish(item);
               return (
                 <article className="cart-item" key={item.key}>
                   <Link to={`/menu/${dish.id}`}>

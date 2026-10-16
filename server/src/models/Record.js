@@ -11,6 +11,7 @@ const recordSchema = new mongoose.Schema(
 );
 
 recordSchema.index({ owner: 1, createdAt: -1 });
+recordSchema.index({ 'data.restaurantId': 1, createdAt: -1 });
 const models = {
   order: mongoose.model('Order', recordSchema.clone(), 'orders'),
   reservation: mongoose.model('Reservation', recordSchema.clone(), 'reservations'),

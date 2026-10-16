@@ -2,8 +2,8 @@
 
 - `User.js`: customer/owner identity, salted password hash, and session revocation version.
 - `Session.js`: hashed session token, account reference/version, and expiry with a MongoDB TTL index.
-- `MenuAvailability.js`: persisted availability overrides for the shared menu catalog.
-- `Record.js`: validated orders, reservations, and contact messages. Orders/reservations
+- `MenuAvailability.js`: persisted overrides in `menu_availability` for the shared menu catalog.
+- `Record.js`: shared schema with separate `orders`, `reservations`, and `messages` collections. Orders/reservations
   belong to an authenticated account ID. Guest contact messages use a hashed browser token.
 
 Controllers validate input, calculate authoritative prices, and check authorization.

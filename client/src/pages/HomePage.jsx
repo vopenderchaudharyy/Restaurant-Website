@@ -26,7 +26,10 @@ export default function HomePage() {
           <h1>
             Your next
             <br />
-            great bite.<span className="hero-period">®</span>
+            great bite.
+            <span className="hero-period" aria-hidden="true">
+              *
+            </span>
           </h1>
           <p>
             Big flavours. Fresh favourites. A table for your people.

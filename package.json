@@ -22,7 +22,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "db:start": "npm run db:start --workspace server",
-    "db:migrate": "npm run db:migrate --workspace server"
+    "db:migrate": "npm run db:migrate --workspace server",
+    "test:mongo": "npm run test:mongo --workspace server"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -2,7 +2,15 @@
 import { after, before, test } from 'node:test';
 import { randomUUID } from 'node:crypto';
 process.env.NODE_ENV = 'test';
-process.env.MONGODB_URI = ''; // Unit/API suite never reads the developer database.
+const mongoTestUri = process.env.MENUMATE_TEST_MONGODB_URI;
+if (
+  mongoTestUri &&
+  !/^mongodb:\/\/127\.0\.0\.1:27017\/menumate_test_[a-f0-9]{32}$/.test(mongoTestUri)
+)
+  throw new Error('Refusing non-isolated MongoDB test target');
+process.env.MONGODB_URI = mongoTestUri || ''; // Never read the developer database.
+const { default: mongoose } = await import('mongoose');
+const { connectDatabase } = await import('../src/config/db.js');
 const { default: app } = await import('../src/app.js');
 const { findUser, updateUser } = await import('../src/services/accounts.js');
 const { rateLimit } = await import('../src/middleware/rateLimit.js');
@@ -36,6 +44,7 @@ async function register(email = `${randomUUID()}@example.com`, extra = {}) {
   };
 }
 before(async () => {
+  if (mongoTestUri) await connectDatabase();
   await new Promise((resolve) => {
     server = app.listen(0, '127.0.0.1', resolve);
   });
@@ -46,10 +55,17 @@ before(async () => {
   await updateUser(owner.user.id, { role: 'admin' });
   admin = owner.cookie;
 });
-after(
-  () =>
-    new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve()))),
-);
+after(async () => {
+  if (server)
+    await new Promise((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve())),
+    );
+  if (mongoTestUri && mongoose.connection.readyState === 1) {
+    assert.match(mongoose.connection.name, /^menumate_test_[a-f0-9]{32}$/);
+    await mongoose.connection.dropDatabase();
+    await mongoose.disconnect();
+  }
+});
 const validOrder = {
   items: [{ dishId: 'grilled-chicken', quantity: 2, size: 'large', extras: ['sauce'] }],
   customer: { name: 'Test Guest', phone: '9876543210', address: '123 Test Road' },
@@ -65,7 +81,7 @@ async function order(body = validOrder) {
 test('public health and menu are available; private APIs require accounts', async () => {
   assert.deepEqual(await (await request('/health', { cookie: null })).json(), {
     status: 'ok',
-    database: 'disconnected',
+    database: mongoTestUri ? 'connected' : 'disconnected',
   });
   const catalog = await (await request('/menu', { cookie: null })).json();
   assert.equal(catalog.length, 8);

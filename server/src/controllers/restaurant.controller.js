@@ -1,8 +1,10 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { menu, extras, totals, itemPrice } from '../../../shared/menu.js';
+import { extras, totals, itemPrice } from '../../../shared/menu.js';
 import { env } from '../config/env.js';
 import { saveRecord, listRecords, getRecord } from '../services/records.js';
 import { getCatalog } from '../services/catalog.js';
+import { restaurantById } from '../services/marketplace.js';
+import { legacyRestaurant } from '../../../shared/restaurants.js';
 
 function fail(message, status = 400) {
   throw Object.assign(new Error(message), { status, expose: true });
@@ -37,7 +39,7 @@ export async function createOrder(req, res) {
   if (!Array.isArray(body.items) || !body.items.length || body.items.length > 30)
     fail('Your cart must contain between 1 and 30 items.');
   const items = body.items.map((item) => {
-    if (!item || !menu.some((dish) => dish.id === item.dishId))
+    if (!item || !catalog.some((dish) => dish.id === item.dishId))
       fail('A dish in your cart is unavailable.');
     if (!catalog.find((dish) => dish.id === item.dishId)?.available)
       fail('A dish in your cart is sold out. Please update your cart.', 409);
@@ -58,10 +60,18 @@ export async function createOrder(req, res) {
     };
     return {
       ...clean,
-      name: menu.find((dish) => dish.id === item.dishId).name,
-      unitPrice: itemPrice(clean),
+      name: catalog.find((dish) => dish.id === item.dishId).name,
+      dish: catalog.find((dish) => dish.id === item.dishId),
+      unitPrice: itemPrice(clean,catalog),
     };
   });
+  const restaurantId=items[0].dish.restaurantId;
+  if(items.some(item=>item.dish.restaurantId!==restaurantId)) fail('Your bag can contain dishes from only one restaurant.',409);
+  if(body.restaurantId && body.restaurantId!==restaurantId) fail('Restaurant does not match your bag.',400);
+  const restaurant=await restaurantById(restaurantId);
+  if(!restaurant || restaurant.status!=='published' || !restaurant.acceptingOrders) fail('This restaurant is not accepting orders.',409);
+  const calculated=totals(items,body.fulfillment,catalog,restaurant.deliveryFee);
+  if(calculated.subtotal<restaurant.minOrder) fail(`This restaurant has a minimum order of ${restaurant.minOrder} rupees.`,400);
   if (!['delivery', 'pickup', 'dine-in'].includes(body.fulfillment))
     fail('Select a fulfillment method.');
   if (!['demo-upi', 'demo-card', 'cash'].includes(body.payment)) fail('Select a payment method.');
@@ -72,6 +82,7 @@ export async function createOrder(req, res) {
   if (!/^[+\d\s()-]{7,20}$/.test(customer.phone)) fail('Please enter a valid phone number.');
   if (body.fulfillment === 'delivery')
     customer.address = text(body.customer?.address, 'delivery address', 300);
+  customer.city = restaurant.city;
   const notes = typeof body.notes === 'string' ? body.notes.slice(0, 500) : '';
   const data = {
     id: `OD-${randomUUID()}`,
@@ -81,7 +92,12 @@ export async function createOrder(req, res) {
     notes,
     fulfillment: body.fulfillment,
     payment: body.payment,
-    totals: totals(items, body.fulfillment),
+    restaurantId,
+    restaurantName: restaurant.name,
+    restaurantAddress: restaurant.address,
+    restaurantImage: restaurant.image,
+    etaMin: restaurant.etaMin, etaMax: restaurant.etaMax,
+    totals: calculated,
     status: 'Placed',
     history: [{ status: 'Placed', at: new Date().toISOString(), actor: req.user.id }],
     demo: true,
@@ -130,6 +146,7 @@ export async function createReservation(req, res) {
     fail('You already have a demo reservation at this time.', 409);
   const data = {
     id: `TB-${randomUUID()}`,
+    restaurantId: legacyRestaurant.id,
     createdAt: new Date().toISOString(),
     date,
     time,

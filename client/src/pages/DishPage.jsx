@@ -10,13 +10,15 @@ import {
   ShoppingBag,
   ArrowLeft,
 } from 'lucide-react';
-import { menu, extras, money } from '../../../shared/menu.js';
+import { extras, money } from '../../../shared/menu.js';
 import { useStore } from '../context/store.js';
-import { Quantity, DishCard, EmptyState, SectionHeading } from '../components/ui.jsx';
+import { Quantity, DishCard, EmptyState, SectionHeading, Loading } from '../components/ui.jsx';
 
 export default function DishPage() {
   const { id } = useParams();
-  const dish = menu.find((item) => item.id === id);
+  const {catalog,catalogLoading}=useStore();
+  const dish = catalog.find((item) => item.id === id);
+  if(!dish && catalogLoading)return <Loading/>;
   if (!dish)
     return (
       <EmptyState title="This dish isn’t on the menu" text="Let’s find you something delicious." />
@@ -63,11 +65,12 @@ function DishDetails({ dish }) {
         </div>
         <div className="detail-content">
           <span className="eyebrow">{dish.tag || 'FRESH FROM OUR KITCHEN'}</span>
+          <Link className="text-link" to={`/restaurants/${dish.restaurantId}`}>{dish.restaurantName}</Link>
           <h1>{dish.name}</h1>
           <div className="rating">
             <Star size={17} fill="currentColor" />
-            <b>{dish.rating}</b>
-            <span>({dish.reviews} happy reviews)</span>
+            <b>{dish.rating || 'New'}</b>
+            {dish.reviews>0 && <span>({dish.reviews} demo ratings)</span>}
             <span className={`diet ${dish.veg ? 'veg' : ''}`}>
               <i />
             </span>
@@ -146,7 +149,7 @@ function DishDetails({ dish }) {
       <section className="section">
         <SectionHeading eyebrow="THE PERFECT COMPANY" title="You might also love" />
         <div className="dish-grid home-dishes">
-          {menu
+          {catalog
             .filter((item) => item.id !== dish.id)
             .slice(0, 4)
             .map((item) => (

@@ -14,17 +14,17 @@ export async function saveRecord(kind, owner, data) {
     });
   return data;
 }
-export async function listRecords(kind, owner) {
+export async function listRecords(kind, owner, restaurantId) {
   if (databaseEnabled())
     return (
       await recordModel(kind)
-        .find({ kind, ...(owner !== undefined ? { owner } : {}) })
+        .find({ kind, ...(owner !== undefined ? { owner } : {}), ...(restaurantId ? {'data.restaurantId':restaurantId} : {}) })
         .sort({ createdAt: -1 })
         .lean()
     ).map((record) => record.data);
   return readLocal((store) =>
     Object.values(store.records)
-      .filter((record) => record.kind === kind && (owner === undefined || record.owner === owner))
+      .filter((record) => record.kind === kind && (owner === undefined || record.owner === owner) && (!restaurantId || record.data.restaurantId===restaurantId))
       .map((record) => record.data)
       .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '')),
   );
@@ -56,7 +56,7 @@ export async function updateRecord(kind, id, owner, status, changes) {
           .findOneAndUpdate(
             { id, kind, 'data.status': status, ...(owner !== undefined ? { owner } : {}) },
             { $set: update },
-            { new: true },
+            { returnDocument: 'after' },
           )
           .lean()
       )?.data || null

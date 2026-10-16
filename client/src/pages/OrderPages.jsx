@@ -45,7 +45,7 @@ export function OrderConfirmationPage() {
       </p>
       <div className="confirmation-card">
         <div className="receipt-line">
-          <span>Order ID</span>
+          <span>{order.restaurantName || 'MenuMate Kitchen'} ? Order ID</span>
           <strong>#{order.id.slice(0, 11).toUpperCase()}</strong>
         </div>
         <div className="delivery-estimate">
@@ -162,11 +162,11 @@ export function OrderTrackingPage() {
         </section>
         <div>
           <div className="tracking-art">
-            <img src="/images/design/restaurant.jpg" alt="MenuMate restaurant" />
+            <img src={order.restaurantImage || "/images/design/restaurant.jpg"} alt={order.restaurantName || "Restaurant"} />
             <div>
               <MapPin size={24} />
-              <strong>Made with love at MenuMate</strong>
-              <span>MG Road, Bangalore</span>
+              <strong>{order.restaurantName || 'MenuMate Kitchen'}</strong>
+              <span>{order.restaurantAddress || 'MG Road, Bengaluru'}</span>
             </div>
           </div>
           <div className="panel tracking-summary">

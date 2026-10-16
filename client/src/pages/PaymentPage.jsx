@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Smartphone, CreditCard, Banknote, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { useStore } from '../context/store.js';
 import { apiRequest } from '../services/api.js';
-import { menu, totals, money, itemPrice } from '../../../shared/menu.js';
+import { cartDish, totals, money, itemPrice } from '../../../shared/menu.js';
 import { Stepper, OrderTotals, EmptyState, DemoNote, ErrorMessage } from '../components/ui.jsx';
 
 export default function PaymentPage() {
@@ -41,6 +41,7 @@ export default function PaymentPage() {
         method: 'POST',
         body: JSON.stringify({
           items: cart,
+          restaurantId:cart[0]?.dish?.restaurantId,
           fulfillment: checkout.fulfillment,
           customer: { name: checkout.name, phone: checkout.phone, address: checkout.address },
           notes: checkout.notes,
@@ -115,7 +116,7 @@ export default function PaymentPage() {
         <aside className="panel summary-panel">
           <h2>Your order</h2>
           {cart.map((item) => {
-            const dish = menu.find((entry) => entry.id === item.dishId);
+            const dish = cartDish(item);
             return (
               <div className="mini-cart-item" key={item.key}>
                 <img src={dish.image} alt="" />

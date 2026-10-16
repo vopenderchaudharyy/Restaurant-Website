@@ -1,3 +1,4 @@
+import { useStore } from '../context/store.js';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -12,12 +13,13 @@ import {
   Wheat,
   X,
 } from 'lucide-react';
-import { menu, categories } from '../../../shared/menu.js';
+import { categories } from '../../../shared/menu.js';
 import { DishCard, EmptyState } from '../components/ui.jsx';
 
 const icons = [Utensils, Soup, Beef, Pizza, Wheat, CakeSlice, Coffee];
 export default function MenuPage() {
   const [params] = useSearchParams();
+  const {catalog}=useStore();
   const [category, setCategory] = useState(() =>
     categories.includes(params.get('category')) ? params.get('category') : 'All Dishes',
   );
@@ -25,7 +27,7 @@ export default function MenuPage() {
   const [veg, setVeg] = useState(params.get('veg') === '1');
   const [sort, setSort] = useState('popular');
   const [showFilters, setShowFilters] = useState(false);
-  const dishes = menu
+  const dishes = catalog
     .filter(
       (dish) =>
         (category === 'All Dishes' || dish.category === category) &&

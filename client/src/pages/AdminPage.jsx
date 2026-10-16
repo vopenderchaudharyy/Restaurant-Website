@@ -10,6 +10,7 @@ import {
   Users,
   Search,
   ArrowLeft,
+  ArrowRight,
   Eye,
   RefreshCw,
   LogOut,
@@ -195,6 +196,7 @@ export default function AdminPage() {
         </div>
       </aside>
       <main className="admin-main">
+        <Link className="platform-manage-link" to="/platform/restaurants">Manage restaurant listings <ArrowRight size={17}/></Link>
         <header className="admin-header">
           <div>
             <span className="eyebrow">YOUR RESTAURANT, AT A GLANCE</span>

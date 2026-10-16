@@ -27,7 +27,7 @@ const tabs = [
 export default function AccountPage() {
   const { section = '' } = useParams();
   const { user, logout } = useAuth();
-  const { favorites, notify } = useStore();
+  const { favorites, notify, catalog } = useStore();
   const navigate = useNavigate();
   async function signOut() {
     try {
@@ -58,6 +58,7 @@ export default function AccountPage() {
                 <span>›</span>
               </NavLink>
             ))}
+            <Link to="/partner"><LayoutDashboard size={18}/>Restaurant workspace</Link>
             {user.role === 'admin' && (
               <Link to="/admin">
                 <LayoutDashboard size={18} />
@@ -84,7 +85,7 @@ export default function AccountPage() {
               <p className="small-muted">Saved in this browser.</p>
               {favorites.length ? (
                 <div className="dish-grid account-dishes">
-                  {menu
+                  {catalog
                     .filter((dish) => favorites.includes(dish.id))
                     .map((dish) => (
                       <DishCard dish={dish} key={dish.id} />
@@ -294,7 +295,7 @@ function CancelAction({ path, label, onSuccess }) {
 }
 export function OrdersList() {
   const { data, loading, error, reload } = useResource('/orders');
-  const { addItem } = useStore();
+  const { addItems } = useStore();
   const [filter, setFilter] = useState('All orders');
   if (loading) return <Loading />;
   if (error)
@@ -335,7 +336,7 @@ export function OrdersList() {
           {orders.map((order) => (
             <article className="order-history-card" key={order.id}>
               <div className="order-history-top">
-                <strong>#{order.id.slice(0, 11).toUpperCase()}</strong>
+                <strong>{order.restaurantName || 'MenuMate Kitchen'} ? #{order.id.slice(0, 11).toUpperCase()}</strong>
                 <span className={`status-badge ${order.status === 'Cancelled' ? 'cancelled' : ''}`}>
                   {order.status}
                 </span>
@@ -349,7 +350,7 @@ export function OrdersList() {
                   {order.items.slice(0, 3).map((item, index) => (
                     <img
                       key={index}
-                      src={menu.find((dish) => dish.id === item.dishId)?.image}
+                      src={item.dish?.image || menu.find((dish) => dish.id === item.dishId)?.image}
                       alt={item.name}
                     />
                   ))}
@@ -363,9 +364,7 @@ export function OrdersList() {
                 <button
                   className="text-link"
                   onClick={() =>
-                    order.items.forEach((item) =>
-                      addItem(item.dishId, item.size, item.extras, item.quantity),
-                    )
+                    addItems(order.items)
                   }
                 >
                   Order again

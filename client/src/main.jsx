@@ -5,6 +5,7 @@ import App from './App.jsx';
 import AppProviders from './context/AppProviders.jsx';
 import './styles/global.css';
 import './styles/experience.css';
+import './styles/marketplace.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

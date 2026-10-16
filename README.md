@@ -1,8 +1,7 @@
 ﻿# MenuMate
 
 Restaurant website organized as a MERN project: MongoDB, Express, React, and Node.js.
-The responsive React UI follows the supplied MenuMate storyboard, with an ivory,
-orange, and forest-green palette, locally hosted photography/fonts, and connected ordering, customer account, and owner management flows.
+The responsive React UI expands the supplied storyboard into a contemporary food experience: bold typography, warm neutral surfaces, orange and sage accents, locally hosted photography/fonts, and connected customer/owner workflows.
 The previous static website is preserved unchanged in `legacy/`.
 
 ## Requirements
@@ -21,9 +20,10 @@ npm install
 
 Copy `client/.env.example` to `client/.env` and `server/.env.example` to `server/.env`.
 These local files have already been created during initial setup and are ignored by Git.
-Then start both applications:
+Start the project-local MongoDB server, then both applications:
 
 ```sh
+npm run db:start
 npm run dev
 ```
 
@@ -45,7 +45,7 @@ client/
     context/             Account sessions, browser cart/favourites, and notifications
     hooks/               Abortable API data loading
     services/            Shared API request helper
-    styles/              Storyboard design system and responsive layouts
+    styles/              Layout primitives plus the contemporary experience.css theme
     test/                Menu, cart, checkout, reservation, and account interaction tests
     App.jsx              Frontend routes
     main.jsx             React entry point
@@ -75,11 +75,33 @@ go in the client; the archive is for reference only. To preview the old site, ru
 
 ## MongoDB
 
-Set `MONGODB_URI` in `server/.env`, for example:
+The local project is configured with this connection in `server/.env`:
 
 ```dotenv
-MONGODB_URI=mongodb://127.0.0.1:27017/menumate
+MONGODB_URI=mongodb://127.0.0.1:27017/restuarantwebsite
 ```
+
+`restuarantwebsite` is the **database** name (retaining the supplied spelling).
+It contains `users`, `sessions`, `orders`, `reservations`, `messages`, and
+`menu_availability`. Required unique and expiry indexes are initialized before the API
+starts accepting requests. In MongoDB Compass, connect to the URI above and open this database.
+
+MongoDB Community 8.2.12 is installed locally in `.tools/mongodb/` from the
+[official MongoDB Windows archive](https://www.mongodb.com/try/download/community-edition/releases).
+`npm run db:start` starts it hidden, bound to `127.0.0.1:27017`, with data/logs in
+`server/.mongodb/`. It reuses an already running local instance. The process remains running
+after the app stops; run the same command after a PC restart. These local runtime folders are
+ignored by Git. This localhost setup has no database authentication and is for development;
+use an authenticated database for deployment.
+
+On another machine, install MongoDB Community, or extract its official Windows zip under
+`.tools/mongodb/`. The helper detects `C:/Program Files/MongoDB/Server/*/bin/mongod.exe` too;
+`MONGOD_PATH` can point to another installed executable. The server binary is not committed.
+
+The existing local account, session, and order were copied to MongoDB. To copy additional
+file-store data later, stop the API and run `npm run db:migrate`, then restart it. Migration
+copies missing IDs, preserves existing MongoDB documents, and leaves the source file intact;
+conflicting email identities stop migration. Do not edit the file store after switching to MongoDB.
 
 For Atlas, use your own connection string in that file. Never put database credentials
 in client environment variables. MongoDB itself must be running separately; installing
@@ -100,7 +122,7 @@ Cart and favourites remain browser-local; profile and private history belong to 
 
 ## Accounts and owner setup
 
-1. Open `/register` and create your account with a password of 12?128 characters.
+1. Open `/register` and create your account with a password of 12-128 characters.
 2. From the repository root, explicitly promote your registered email:
 
    ```sh
@@ -160,12 +182,32 @@ when already in a cart. Reservations prevent duplicate slots within an account; 
 capacity is not modeled. Switching an owner availability setting does not alter existing orders.
 
 The storyboard's contact information, ratings, and restaurant statistics are sample content.
-Automated tests cover the local storage/API path and React interactions; MongoDB integration
-and a production deployment still need verification against a configured database.
+Automated tests cover the file storage/API path and React interactions. `npm run test:mongo`
+repeats the API suite against a randomly named, isolated local MongoDB database and removes
+that test database afterwards. It never uses `restuarantwebsite`. Browser visual checks
+remain unverified because browser automation was unavailable; production deployment is not configured.
+
+## Updated interface and motion
+
+- A new asymmetric home hero, food photography, craving categories, and contemporary cards.
+- Quick dish previews with portions, extras, quantity, and accurate running prices.
+- A slide-out shopping bag with editable quantities, removal, totals, and checkout links.
+- Global `Ctrl/Cmd + K` search, live results, and query/category links into the menu.
+- Header, menu, checkout, account, and owner surfaces share the updated typography and palette.
+- Short page entrances, scroll reveals, menu transitions, hover feedback, and bag count feedback.
+  No perpetual decorative animation. Reduced-motion preferences disable nonessential movement.
+- Native modal dialogs with Escape dismissal, background isolation, scroll locking, and focus restoration.
+
+Motion follows the browser's [reduced-motion preference](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/%40media/prefers-reduced-motion),
+and overlays use the [native modal dialog API](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDialogElement/showModal).
+React tests emulate dialog open/close in jsdom; native focus trapping still needs a browser review.
 
 ## Commands
 
+- `npm run db:start`: start/reuse project-local MongoDB.
+- `npm run db:migrate`: copy missing file-store records to the configured MongoDB.
 - `npm run dev`: run frontend and backend together.
+- `npm run test:mongo`: run isolated MongoDB integration tests (requires local MongoDB).
 - `npm run dev:client` / `npm run dev:server`: run either application separately.
 - `npm run admin:promote --workspace server -- email@example.com`: grant an existing account owner access.
 - `npm run lint`: check project JavaScript and React code.

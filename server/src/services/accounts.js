@@ -63,7 +63,7 @@ export async function updateUser(id, changes, expectedVersion) {
     return User.findOneAndUpdate(
       { id, ...(expectedVersion !== undefined ? { authVersion: expectedVersion } : {}) },
       { $set: changes },
-      { new: true },
+      { returnDocument: 'after' },
     ).lean();
   return writeLocal((data) => {
     const user = data.users[id];

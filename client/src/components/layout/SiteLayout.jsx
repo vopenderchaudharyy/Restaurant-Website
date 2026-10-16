@@ -18,8 +18,8 @@ import { useAuth } from '../../context/auth.js';
 
 const navigation = [
   ['/', 'Home'],
-  ['/menu', 'Menu'],
-  ['/booking', 'Reservations'],
+  ['/restaurants', 'Restaurants'],
+  ['/menu', 'Dishes'],
   ['/about', 'About'],
   ['/contact', 'Contact'],
 ];
@@ -61,6 +61,9 @@ export default function SiteLayout() {
                 {label}
               </NavLink>
             ))}
+            <NavLink className="mobile-account-nav" to="/account" onClick={() => setOpen(false)}>
+              {user ? 'My account' : 'Sign in'}
+            </NavLink>
           </nav>
           <div className="header-actions">
             <button
@@ -93,8 +96,8 @@ export default function SiteLayout() {
             <Link className="icon-button account-link" to="/account" aria-label="My account">
               {user ? <span className="nav-avatar">{user.name[0]}</span> : <UserRound size={20} />}
             </Link>
-            <Link className="button header-order" to="/menu">
-              Order now <ArrowUpRight size={16} />
+            <Link className="button header-order" to="/partner">
+              Partner with us <ArrowUpRight size={16} />
             </Link>
             <button
               className="icon-button mobile-toggle"
@@ -132,34 +135,35 @@ export default function SiteLayout() {
               MenuMate<span className="brand-dot">.</span>
             </Link>
             <p>
-              Good food. Great company.
+              Your city. Served fresh.
               <br />
-              Memories made around the table.
+              Local kitchens. A world of flavour.
             </p>
           </div>
           <div>
-            <h4>Come on over</h4>
+            <h4>Made for your city</h4>
             <p>
-              123, MG Road, Bangalore
+              Discover restaurants near you
               <br />
-              Karnataka 560001
+              Filter by city and cuisine
             </p>
             <span className="footer-hours">
               <Clock size={14} /> Daily · 11 AM – 11 PM
             </span>
           </div>
           <div>
-            <h4>A seat for everyone</h4>
-            <Link to="/menu">Explore our menu</Link>
-            <Link to="/booking">Reserve a table</Link>
+            <h4>Find your next favourite</h4>
+            <Link to="/restaurants">Explore restaurants</Link>
+            <Link to="/menu">Browse all dishes</Link>
             <Link to="/contact">Get in touch</Link>
           </div>
           <div>
             <h4>Make yourself at home</h4>
+            <Link to="/partner">Restaurant workspace</Link>
             <Link to="/account/orders">Your orders</Link>
             <Link to="/account">Your account</Link>
             <Link to="/admin">
-              Owner dashboard <ArrowUpRight size={12} />
+              Platform dashboard <ArrowUpRight size={12} />
             </Link>
           </div>
         </div>

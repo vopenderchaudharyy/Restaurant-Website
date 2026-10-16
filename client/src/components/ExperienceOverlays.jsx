@@ -11,11 +11,11 @@ import {
   Check,
 } from 'lucide-react';
 import { useStore } from '../context/store.js';
-import { menu, extras, money, itemPrice, totals } from '../../../shared/menu.js';
+import { extras, money, itemPrice, totals } from '../../../shared/menu.js';
 import { Quantity, OrderTotals } from './ui.jsx';
 
 export default function ExperienceOverlays() {
-  const { overlay, setOverlay } = useStore();
+  const { overlay, setOverlay, addItems, cart } = useStore();
   const ref = useRef(null);
   const titleId = useId();
   const type = overlay?.type;
@@ -48,6 +48,7 @@ export default function ExperienceOverlays() {
           <button className="dialog-close icon-button" onClick={close} aria-label="Close dialog">
             <X size={21} />
           </button>
+          {type === 'switch' && <div className="switch-restaurant"><span className="eyebrow">A FRESH START?</span><h2 id={titleId}>Switch restaurants?</h2><p>Your bag contains dishes from {cart[0]?.dish?.restaurantName}. Starting an order from {overlay.restaurantName} will replace them.</p><button className="button" onClick={()=>{if(addItems(overlay.items,true))setOverlay({type:'bag'});}}>Start a new bag</button><button className="button secondary" onClick={close}>Keep current bag</button></div>}
           {type === 'dish' && (
             <QuickDish key={overlay.id} id={overlay.id} titleId={titleId} close={close} />
           )}
@@ -60,13 +61,13 @@ export default function ExperienceOverlays() {
 }
 function QuickDish({ id, titleId, close }) {
   const { addItem, catalog, setOverlay } = useStore();
-  const dish = menu.find((item) => item.id === id);
+  const dish = catalog.find((item) => item.id === id);
   const [size, setSize] = useState('regular');
   const [selected, setSelected] = useState([]);
   const [quantity, setQuantity] = useState(1);
   if (!dish) return <h2 id={titleId}>This dish is unavailable.</h2>;
   const available = catalog.find((item) => item.id === id)?.available !== false;
-  const price = itemPrice({ dishId: id, size, extras: selected }) * quantity;
+  const price = itemPrice({ dishId: id, size, extras: selected },catalog) * quantity;
   return (
     <div className="quick-dish-layout">
       <div className="quick-dish-photo">
@@ -93,7 +94,7 @@ function QuickDish({ id, titleId, close }) {
               />
               <span>
                 {value === 'regular' ? 'Regular' : 'Large'}
-                <strong>{money(itemPrice({ dishId: id, size: value, extras: [] }))}</strong>
+                <strong>{money(itemPrice({ dishId: id, size: value, extras: [] },catalog))}</strong>
               </span>
               {size === value && <Check size={17} />}
             </label>
@@ -125,8 +126,7 @@ function QuickDish({ id, titleId, close }) {
             className="button"
             disabled={!available}
             onClick={() => {
-              addItem(id, size, selected, quantity);
-              setOverlay({ type: 'bag' });
+              if(addItem(id, size, selected, quantity)) setOverlay({ type: 'bag' });
             }}
           >
             {available ? (
@@ -156,6 +156,7 @@ function Bag({ titleId, close }) {
           Your bag <span>({count})</span>
         </h2>
       </div>
+      {cart.length>0 && <p className="bag-restaurant">From {cart[0].dish?.restaurantName || 'MenuMate Kitchen'}</p>}
       {!cart.length ? (
         <div className="bag-empty">
           <ShoppingBag size={52} strokeWidth={1.2} />
@@ -169,7 +170,7 @@ function Bag({ titleId, close }) {
         <>
           <div className="bag-items">
             {cart.map((item) => {
-              const dish = menu.find((entry) => entry.id === item.dishId);
+              const dish = catalog.find((entry) => entry.id === item.dishId) || item.dish;
               const soldOut =
                 catalog.find((entry) => entry.id === item.dishId)?.available === false;
               return (

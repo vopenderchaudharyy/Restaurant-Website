@@ -91,6 +91,7 @@ export function DishCard({ dish }) {
         </button>
       </div>
       <div className="dish-info">
+        {dish.restaurantId && <Link className="dish-restaurant" to={`/restaurants/${dish.restaurantId}`}>{dish.restaurantName}</Link>}
         <div className="dish-title">
           <h3>
             <Link to={`/menu/${dish.id}`}>{dish.name}</Link>
@@ -104,8 +105,8 @@ export function DishCard({ dish }) {
         </div>
         <div className="rating">
           <Star size={13} fill="currentColor" />
-          <b>{dish.rating}</b>
-          <span>({dish.reviews} reviews)</span>
+          <b>{dish.rating || 'New'}</b>
+          {dish.reviews>0 && <span>({dish.reviews} demo ratings)</span>}
         </div>
         <div className="dish-bottom">
           <strong>{money(dish.price)}</strong>
