@@ -316,6 +316,19 @@ allow the exact Netlify origin, use HTTPS, and retain uploaded images on persist
 `VITE_STATIC_DEMO=false` after the proxy is live and verified. Never put MongoDB or Razorpay secrets
 in `VITE_` variables because those values are public browser code.
 
+### Render API
+
+The root `render.yaml` defines a free Node web service for the Express API. It installs production
+workspace dependencies, starts `server/src/server.js`, binds to Render on `0.0.0.0`, and checks
+`/api/health`. Create the service from the repository Blueprint and enter the MongoDB Atlas URI when
+Render prompts for `MONGODB_URI`; do not commit that URI.
+
+After Render assigns the final `onrender.com` URL, add the `/api/*` proxy shown above to
+`netlify.toml`, place it before the SPA fallback, and set `VITE_STATIC_DEMO=false`. Render's free
+filesystem is temporary, so uploaded restaurant photos can disappear after restarts or deploys.
+Use a paid persistent disk with `MENUMATE_UPLOAD_DIR` or move photos to object storage before relying
+on uploads in production.
+
 ## Tooling references
 
 - [Vite setup and Node.js requirements](https://vite.dev/guide/)

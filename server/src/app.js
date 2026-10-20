@@ -11,6 +11,7 @@ import { paymentWebhook } from './controllers/payments.controller.js';
 
 const app = express();
 app.disable('x-powered-by');
+if (env.nodeEnv === 'production') app.set('trust proxy', 1);
 app.use(helmet());
 app.use(cors({ origin: env.clientOrigin, credentials: true }));
 if (env.nodeEnv !== 'test') app.use(morgan('dev'));
