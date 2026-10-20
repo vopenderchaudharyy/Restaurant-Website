@@ -285,10 +285,9 @@ and rewrites browser routes to the React entry point. This prevents Netlify from
 root website or returning a 404 when a visitor refreshes `/restaurants`, `/menu/...`, or another
 client route. Netlify automatically uses these settings after the commit is deployed.
 
-Netlify hosts the frontend only; it does not run the persistent Express/MongoDB API in this repo.
-Until a public API is deployed, `VITE_STATIC_DEMO=true` keeps the public demo restaurants and dishes
-browsable and shows a clear preview notice. Accounts, restaurant registration, saved server data,
-checkout, uploads, reviews and admin tools require the API.
+Netlify hosts the frontend and proxies `/api/*` to the deployed Express service at
+`https://menumate-api.onrender.com`. The API connects to MongoDB Atlas, so accounts, restaurant
+registration, saved server data, checkout, uploads, reviews and admin tools use the live backend.
 
 For the complete application, deploy `server/` to a Node host with persistent storage and MongoDB.
 Keep the browser API path at `/api`, then add a Netlify proxy rule **above** the SPA fallback in
@@ -323,11 +322,10 @@ workspace dependencies, starts `server/src/server.js`, binds to Render on `0.0.0
 `/api/health`. Create the service from the repository Blueprint and enter the MongoDB Atlas URI when
 Render prompts for `MONGODB_URI`; do not commit that URI.
 
-After Render assigns the final `onrender.com` URL, add the `/api/*` proxy shown above to
-`netlify.toml`, place it before the SPA fallback, and set `VITE_STATIC_DEMO=false`. Render's free
-filesystem is temporary, so uploaded restaurant photos can disappear after restarts or deploys.
-Use a paid persistent disk with `MENUMATE_UPLOAD_DIR` or move photos to object storage before relying
-on uploads in production.
+The deployed API is available at `https://menumate-api.onrender.com`; Netlify's `/api/*` rewrite is
+placed before the SPA fallback and `VITE_STATIC_DEMO=false`. Render's free filesystem is temporary,
+so uploaded restaurant photos can disappear after restarts or deploys. Use a paid persistent disk
+with `MENUMATE_UPLOAD_DIR` or move photos to object storage before relying on uploads in production.
 
 ## Tooling references
 
