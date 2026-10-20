@@ -17,3 +17,7 @@ services:
         value: https://menumateweb.netlify.app
       - key: MONGODB_URI
         sync: false
+      - key: MONGODB_DB_NAME
+        value: restuarantwebsite
+      - key: MONGODB_MIGRATE_FROM
+        value: test

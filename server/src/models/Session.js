@@ -5,4 +5,4 @@ const schema = new mongoose.Schema({
   version: { type: Number, required: true },
   expiresAt: { type: Date, required: true, expires: 0 },
 });
-export default mongoose.model('Session', schema);
+export default mongoose.model('Session', schema, 'sessions');

@@ -79,12 +79,18 @@ The local project is configured with this connection in `server/.env`:
 
 ```dotenv
 MONGODB_URI=mongodb://127.0.0.1:27017/restuarantwebsite
+MONGODB_DB_NAME=restuarantwebsite
 ```
 
 `restuarantwebsite` is the **database** name (retaining the supplied spelling).
 It contains `users`, `sessions`, `orders`, `reservations`, `messages`, and
 `menu_availability`, `restaurants`, and `menu_items`. Required unique and expiry indexes are initialized before the API
 starts accepting requests. In MongoDB Compass, connect to the URI above and open this database.
+Production sets `MONGODB_DB_NAME` explicitly so an Atlas URI without a database path cannot silently
+write application collections into MongoDB's default `test` database. The Render deployment also
+runs one idempotent, insert-only migration from `test` to recover registrations created before this
+setting was added. It copies only known MenuMate collections and records completion in
+`system_migrations`; existing target records are never replaced.
 
 MongoDB Community 8.2.12 is installed locally in `.tools/mongodb/` from the
 [official MongoDB Windows archive](https://www.mongodb.com/try/download/community-edition/releases).

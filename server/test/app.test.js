@@ -13,12 +13,15 @@ const uploadTestDirectory = await mkdtemp(join(tmpdir(), 'menumate-photos-test-'
 // Match the default hidden storage folder so serving tests catch dotfile regressions.
 process.env.MENUMATE_UPLOAD_DIR = join(uploadTestDirectory, '.uploads');
 const mongoTestUri = process.env.MENUMATE_TEST_MONGODB_URI;
+const mongoTestDatabase = process.env.MENUMATE_TEST_DATABASE;
 if (
   mongoTestUri &&
-  !/^mongodb:\/\/127\.0\.0\.1:27017\/menumate_test_[a-f0-9]{32}$/.test(mongoTestUri)
+  (!/^mongodb:\/\/127\.0\.0\.1:27017\/menumate_source_[a-f0-9]{32}$/.test(mongoTestUri) ||
+    !/^menumate_test_[a-f0-9]{32}$/.test(mongoTestDatabase || ''))
 )
   throw new Error('Refusing non-isolated MongoDB test target');
 process.env.MONGODB_URI = mongoTestUri || ''; // Never read the developer database.
+process.env.MONGODB_DB_NAME = mongoTestDatabase || '';
 const { default: mongoose } = await import('mongoose');
 const { connectDatabase } = await import('../src/config/db.js');
 const { default: app } = await import('../src/app.js');
@@ -56,6 +59,8 @@ async function register(email = `${randomUUID()}@example.com`, extra = {}) {
 }
 before(async () => {
   if (mongoTestUri) await connectDatabase();
+  if (process.env.MENUMATE_TEST_MIGRATED_EMAIL)
+    assert.ok(await findUser({ email: process.env.MENUMATE_TEST_MIGRATED_EMAIL }));
   await new Promise((resolve) => {
     server = app.listen(0, '127.0.0.1', resolve);
   });
@@ -72,7 +77,7 @@ after(async () => {
       server.close((error) => (error ? reject(error) : resolve())),
     );
   if (mongoTestUri && mongoose.connection.readyState === 1) {
-    assert.match(mongoose.connection.name, /^menumate_test_[a-f0-9]{32}$/);
+    assert.equal(mongoose.connection.name, mongoTestDatabase);
     await mongoose.connection.dropDatabase();
     await mongoose.disconnect();
   }
@@ -94,10 +99,16 @@ async function order(body = validOrder) {
 }
 
 test('public health and menu are available; private APIs require accounts', async () => {
-  assert.deepEqual(await (await request('/health', { cookie: null })).json(), {
-    status: 'ok',
-    database: mongoTestUri ? 'connected' : 'disconnected',
-  });
+  const health = await (await request('/health', { cookie: null })).json();
+  assert.equal(health.status, 'ok');
+  assert.equal(health.database, mongoTestUri ? 'connected' : 'disconnected');
+  assert.equal(health.databaseName, mongoTestUri ? mongoose.connection.name : null);
+  assert.equal(health.schema, mongoTestUri ? 'ready' : 'unavailable');
+  if (mongoTestUri) {
+    assert.equal(health.migration.status, 'complete');
+    assert.equal(health.migration.source, process.env.MONGODB_MIGRATE_FROM);
+    assert.ok(health.migration.copied >= 1);
+  } else assert.equal(health.migration, undefined);
   const catalog = await (await request('/menu', { cookie: null })).json();
   assert.equal(catalog.length, 52);
   assert.equal((await request('/orders', { cookie: null })).status, 401);

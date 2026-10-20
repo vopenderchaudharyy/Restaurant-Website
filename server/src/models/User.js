@@ -9,4 +9,4 @@ const schema = new mongoose.Schema({
   authVersion: { type: Number, default: 0 },
   createdAt: { type: String, required: true },
 });
-export default mongoose.model('User', schema);
+export default mongoose.model('User', schema, 'users');

@@ -10,6 +10,8 @@
 - `Record.js`: shared schema with separate `orders`, `reservations`, `messages`, and `reviews` collections. Orders/reservations
   belong to an authenticated account ID. Marketplace orders also carry `restaurantId` with an index for owner queries. Guest contact messages use a hashed browser token.
   Reviews are tied to completed orders and expose an abbreviated customer name publicly.
+- `system_migrations`: idempotent deployment markers. The first Atlas correction copies only known
+  MenuMate collections from the previous default database without replacing target records.
 
 Controllers validate input, calculate authoritative prices, and check authorization.
 Status updates use a conditional write against the previous status to reject conflicting
