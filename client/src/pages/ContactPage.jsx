@@ -39,23 +39,45 @@ export default function ContactPage() {
           </p>
           <div className="contact-details">
             {[
-              [Phone, 'Give us a ring', '+91 98765 43210'],
-              [Mail, 'Drop us a note', 'hello@menumate.com'],
-              [MapPin, 'Come find us', '123, MG Road, Bangalore, Karnataka 560001'],
+              [Phone, 'Give us a ring', '+91 88946 16815', 'tel:+918894616815'],
+              [
+                Mail,
+                'Drop us a note',
+                'vopenderchaudhary@gmai.com',
+                'mailto:vopenderchaudhary@gmai.com',
+              ],
+              [
+                MapPin,
+                'Come find us',
+                'North Pateri, Satna, Madhya Pradesh',
+                'https://www.google.com/maps/search/?api=1&query=North+Pateri+Satna+Madhya+Pradesh',
+              ],
               [Clock, 'Our doors are open', 'Monday – Sunday · 11:00 AM – 11:00 PM'],
-            ].map(([Icon, label, text]) => (
+            ].map(([Icon, label, text, href]) => (
               <div key={label}>
                 <span>
                   <Icon size={21} />
                 </span>
                 <div>
                   <small>{label}</small>
-                  <p>{text}</p>
+                  <p>
+                    {href ? (
+                      <a
+                        href={href}
+                        target={href.startsWith('http') ? '_blank' : undefined}
+                        rel={href.startsWith('http') ? 'noreferrer' : undefined}
+                      >
+                        {text}
+                      </a>
+                    ) : (
+                      text
+                    )}
+                  </p>
                 </div>
               </div>
             ))}
           </div>
-          <DemoNote>Contact details shown are sample content from the design.</DemoNote>
+          <DemoNote>Call or email us for customer and restaurant-partner support.</DemoNote>
         </div>
         <div className="contact-image">
           <img src="/images/design/restaurant.jpg" alt="A glimpse inside our warm restaurant" />
@@ -63,14 +85,14 @@ export default function ContactPage() {
             <MapPin size={24} />
             <span>
               <strong>Your next favourite place.</strong>
-              <small>MG Road, Bangalore</small>
+              <small>North Pateri, Satna, Madhya Pradesh</small>
             </span>
             <a
               className="icon-button"
-              href="https://www.google.com/maps/search/MG+Road+Bangalore"
+              href="https://www.google.com/maps/search/?api=1&query=North+Pateri+Satna+Madhya+Pradesh"
               target="_blank"
               rel="noreferrer"
-              aria-label="Explore MG Road on Google Maps"
+              aria-label="Explore North Pateri, Satna on Google Maps"
             >
               <ArrowUpRight />
             </a>
