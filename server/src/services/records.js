@@ -4,6 +4,22 @@ import { readLocal, writeLocal } from './localStore.js';
 import { fail } from '../utils/errors.js';
 
 const databaseEnabled = () => mongoose.connection.readyState === 1;
+export async function saveOrderOnce(owner, data) {
+  if (databaseEnabled()) {
+    try {
+      await recordModel('order').create({ id: data.id, kind: 'order', owner, data });
+    } catch (error) {
+      if (error.code !== 11000) throw error;
+    }
+    return getRecord('order', data.id, owner);
+  }
+  return writeLocal((store) => {
+    if (store.records[data.id])
+      return store.records[data.id].owner === owner ? store.records[data.id].data : null;
+    store.records[data.id] = { kind: 'order', owner, data };
+    return data;
+  });
+}
 export async function saveRecord(kind, owner, data) {
   if (databaseEnabled()) await recordModel(kind).create({ id: data.id, kind, owner, data });
   else
@@ -18,13 +34,22 @@ export async function listRecords(kind, owner, restaurantId) {
   if (databaseEnabled())
     return (
       await recordModel(kind)
-        .find({ kind, ...(owner !== undefined ? { owner } : {}), ...(restaurantId ? {'data.restaurantId':restaurantId} : {}) })
+        .find({
+          kind,
+          ...(owner !== undefined ? { owner } : {}),
+          ...(restaurantId ? { 'data.restaurantId': restaurantId } : {}),
+        })
         .sort({ createdAt: -1 })
         .lean()
     ).map((record) => record.data);
   return readLocal((store) =>
     Object.values(store.records)
-      .filter((record) => record.kind === kind && (owner === undefined || record.owner === owner) && (!restaurantId || record.data.restaurantId===restaurantId))
+      .filter(
+        (record) =>
+          record.kind === kind &&
+          (owner === undefined || record.owner === owner) &&
+          (!restaurantId || record.data.restaurantId === restaurantId),
+      )
       .map((record) => record.data)
       .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '')),
   );

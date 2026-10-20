@@ -1,5 +1,25 @@
-import { browseRestaurants, restaurantDetail, partnerOverview, partnerRegister, partnerUpdate, partnerPublish, partnerMenuSave, partnerOrders, partnerOrderStatus, platformRestaurants, platformRestaurantStatus } from '../controllers/marketplace.controller.js';
-import { Router } from 'express';
+import {
+  browseRestaurants,
+  restaurantDetail,
+  partnerOverview,
+  partnerRegister,
+  partnerUpdate,
+  partnerPublish,
+  partnerMenuSave,
+  partnerOrders,
+  partnerOrderStatus,
+  platformRestaurants,
+  platformRestaurantStatus,
+} from '../controllers/marketplace.controller.js';
+import { Router, raw } from 'express';
+import { uploadPhoto } from '../controllers/photos.controller.js';
+import {
+  getPaymentConfig,
+  startCheckout,
+  checkoutStatus,
+  verifyCheckout,
+  refundOrder,
+} from '../controllers/payments.controller.js';
 import { getHealth } from '../controllers/health.controller.js';
 import {
   getMenu,
@@ -30,23 +50,45 @@ import {
   cancelOrder,
   cancelReservation,
 } from '../controllers/admin.controller.js';
+import {
+  orderReview,
+  submitReview,
+  publicRestaurantReviews,
+  partnerReviews,
+  adminReviews,
+  moderateReview,
+} from '../controllers/reviews.controller.js';
 
 const router = Router();
 router.get('/health', getHealth);
-router.get('/restaurants',browseRestaurants);
-router.get('/restaurants/:id',restaurantDetail);
-router.use('/partner',requireAuth);
-router.get('/partner',partnerOverview);
-router.post('/partner',rateLimit({limit:10}),partnerRegister);
-router.patch('/partner',partnerUpdate);
-router.post('/partner/publish',partnerPublish);
-router.post('/partner/menu',partnerMenuSave);
-router.patch('/partner/menu/:id',partnerMenuSave);
-router.get('/partner/orders',partnerOrders);
-router.patch('/partner/orders/:id',partnerOrderStatus);
+router.get('/payments/config', getPaymentConfig);
+router.post('/payments/checkout', requireAuth, rateLimit({ limit: 30 }), startCheckout);
+router.get('/payments/checkout/:id', requireAuth, checkoutStatus);
+router.post('/payments/checkout/:id/verify', requireAuth, rateLimit({ limit: 60 }), verifyCheckout);
+router.get('/restaurants', browseRestaurants);
+router.get('/restaurants/:id', restaurantDetail);
+router.get('/restaurants/:id/reviews', publicRestaurantReviews);
+router.use('/partner', requireAuth);
+router.post(
+  '/partner/photos',
+  rateLimit({ limit: 40 }),
+  raw({ type: ['image/jpeg', 'image/png', 'image/webp'], limit: '5mb', inflate: false }),
+  uploadPhoto,
+);
+router.get('/partner', partnerOverview);
+router.post('/partner', rateLimit({ limit: 10 }), partnerRegister);
+router.patch('/partner', partnerUpdate);
+router.post('/partner/publish', partnerPublish);
+router.post('/partner/menu', partnerMenuSave);
+router.patch('/partner/menu/:id', partnerMenuSave);
+router.get('/partner/orders', partnerOrders);
+router.get('/partner/reviews', partnerReviews);
+router.patch('/partner/orders/:id', partnerOrderStatus);
 router.get('/menu', getMenu);
 router.get('/orders', requireAuth, getOrders);
 router.get('/orders/:id', requireAuth, getOrder);
+router.get('/orders/:id/review', requireAuth, orderReview);
+router.put('/orders/:id/review', requireAuth, rateLimit({ limit: 20 }), submitReview);
 router.post('/orders', requireAuth, createOrder);
 router.patch('/orders/:id/cancel', requireAuth, cancelOrder);
 router.get('/reservations', requireAuth, getReservations);
@@ -62,9 +104,12 @@ router.post('/auth/logout', logout);
 router.patch('/auth/profile', requireAuth, profile);
 router.post('/auth/password', requireAuth, authLimit, changePassword);
 router.use('/admin', requireAdmin);
+router.post('/admin/orders/:id/refund', rateLimit({ limit: 30 }), refundOrder);
 router.get('/admin/restaurants', platformRestaurants);
 router.patch('/admin/restaurants/:id', platformRestaurantStatus);
 router.get('/admin/orders', adminOrders);
+router.get('/admin/reviews', adminReviews);
+router.patch('/admin/reviews/:id', moderateReview);
 router.patch('/admin/orders/:id', adminOrderStatus);
 router.get('/admin/reservations', adminReservations);
 router.patch('/admin/reservations/:id', adminReservationStatus);

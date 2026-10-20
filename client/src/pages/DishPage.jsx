@@ -1,3 +1,4 @@
+import { photoUrl } from '../services/photos.js';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
@@ -16,9 +17,9 @@ import { Quantity, DishCard, EmptyState, SectionHeading, Loading } from '../comp
 
 export default function DishPage() {
   const { id } = useParams();
-  const {catalog,catalogLoading}=useStore();
+  const { catalog, catalogLoading } = useStore();
   const dish = catalog.find((item) => item.id === id);
-  if(!dish && catalogLoading)return <Loading/>;
+  if (!dish && catalogLoading) return <Loading />;
   if (!dish)
     return (
       <EmptyState title="This dish isn’t on the menu" text="Let’s find you something delicious." />
@@ -50,7 +51,7 @@ function DishDetails({ dish }) {
       </div>
       <div className="dish-detail">
         <div className="detail-photo">
-          <img src={dish.image} alt={dish.name} />
+          <img src={photoUrl(dish.image)} alt={dish.name} />
           <button
             className={`favorite ${favorites.includes(dish.id) ? 'selected' : ''}`}
             aria-label="Toggle favorite"
@@ -65,12 +66,17 @@ function DishDetails({ dish }) {
         </div>
         <div className="detail-content">
           <span className="eyebrow">{dish.tag || 'FRESH FROM OUR KITCHEN'}</span>
-          <Link className="text-link" to={`/restaurants/${dish.restaurantId}`}>{dish.restaurantName}</Link>
+          <Link className="text-link" to={`/restaurants/${dish.restaurantId}`}>
+            {dish.restaurantName}
+          </Link>
           <h1>{dish.name}</h1>
+          {dish.samplePhoto && (
+            <p className="small-muted">Demo dish with illustrative photography.</p>
+          )}
           <div className="rating">
             <Star size={17} fill="currentColor" />
             <b>{dish.rating || 'New'}</b>
-            {dish.reviews>0 && <span>({dish.reviews} demo ratings)</span>}
+            {dish.reviews > 0 && <span>({dish.reviews} demo ratings)</span>}
             <span className={`diet ${dish.veg ? 'veg' : ''}`}>
               <i />
             </span>

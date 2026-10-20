@@ -19,7 +19,7 @@ import { DishCard, EmptyState } from '../components/ui.jsx';
 const icons = [Utensils, Soup, Beef, Pizza, Wheat, CakeSlice, Coffee];
 export default function MenuPage() {
   const [params] = useSearchParams();
-  const {catalog}=useStore();
+  const { catalog } = useStore();
   const [category, setCategory] = useState(() =>
     categories.includes(params.get('category')) ? params.get('category') : 'All Dishes',
   );
@@ -39,7 +39,7 @@ export default function MenuPage() {
     <div className="menu-page">
       <section className="menu-intro container">
         <div>
-          <span className="eyebrow">FRESH FROM OUR KITCHEN</span>
+          <span className="eyebrow">FROM THE KITCHENS AROUND YOU</span>
           <h1>
             Good taste.
             <br />
@@ -144,7 +144,7 @@ export default function MenuPage() {
           <span>{dishes.length} delicious possibilities</span>
         </div>
         {dishes.length ? (
-          <div className="dish-grid menu-results" key={`${category}-${query}-${veg}-${sort}`}>
+          <div className="dish-grid menu-results">
             {dishes.map((dish) => (
               <DishCard key={dish.id} dish={dish} />
             ))}

@@ -33,7 +33,7 @@ export function requireAuth(req, _res, next) {
 }
 export function requireAdmin(req, _res, next) {
   if (!req.user) fail('Please sign in to continue.', 401);
-  if (req.user.role !== 'admin') fail('Owner access is required.', 403);
+  if (req.user.role !== 'admin') fail('Platform administrator access is required.', 403);
   next();
 }
 export function csrfGuard(req, _res, next) {

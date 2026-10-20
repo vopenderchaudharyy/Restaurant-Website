@@ -1,4 +1,7 @@
-﻿import { useState } from 'react';
+import { PaymentStatus, RefundControl } from '../components/PaymentStatus.jsx';
+import { ReviewCard, Stars } from '../components/OrderReview.jsx';
+import { photoUrl } from '../services/photos.js';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ChefHat,
@@ -14,6 +17,7 @@ import {
   Eye,
   RefreshCw,
   LogOut,
+  MessageSquareText,
 } from 'lucide-react';
 import { useResource } from '../hooks/useResource.js';
 import { useAuth } from '../context/auth.js';
@@ -111,16 +115,20 @@ export default function AdminPage() {
   const orders = useResource('/admin/orders', { pollMs: 30000 });
   const reservations = useResource('/admin/reservations', { pollMs: 30000 });
   const catalog = useResource('/menu');
+  const reviews = useResource('/admin/reviews', { pollMs: 30000 });
   const allOrders = orders.data || [];
   const allReservations = reservations.data || [];
   const dishes = catalog.data || [];
+  const allReviews = reviews.data?.reviews || [];
   const orderValue = allOrders
     .filter((order) => order.status !== 'Cancelled')
     .reduce((sum, order) => sum + order.totals.total, 0);
   const filtered = allOrders.filter(
     (order) =>
       (filter === 'All' || order.status === filter) &&
-      `${order.id} ${order.customer.name}`.toLowerCase().includes(query.toLowerCase()),
+      `${order.id} ${order.customer.name} ${order.restaurantName || 'MenuMate Kitchen'}`
+        .toLowerCase()
+        .includes(query.toLowerCase()),
   );
   const totalPages = Math.max(1, Math.ceil(filtered.length / 10));
   const currentPage = Math.min(page, totalPages);
@@ -151,6 +159,22 @@ export default function AdminPage() {
     orders.reload();
     reservations.reload();
     catalog.reload();
+    reviews.reload();
+  }
+  async function moderate(review) {
+    setError('');
+    try {
+      await apiRequest(`/admin/reviews/${review.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          status: review.status === 'hidden' ? 'published' : 'hidden',
+          expectedStatus: review.status,
+        }),
+      });
+      reviews.reload();
+    } catch (failure) {
+      setError(failure.message);
+    }
   }
   return (
     <div className="admin-shell">
@@ -161,13 +185,14 @@ export default function AdminPage() {
           </span>
           MenuMate<span className="brand-dot">.</span>
         </Link>
-        <span className="admin-label">RESTAURANT WORKSPACE</span>
+        <span className="admin-label">PLATFORM WORKSPACE</span>
         <nav aria-label="Dashboard navigation">
           {[
             ['Overview', LayoutDashboard],
             ['Orders', ShoppingBag],
             ['Menu', Utensils],
             ['Reservations', CalendarDays],
+            ['Reviews', MessageSquareText],
           ].map(([name, Icon]) => (
             <button
               className={tab === name ? 'active' : ''}
@@ -180,15 +205,16 @@ export default function AdminPage() {
               <Icon size={18} />
               {name}
               {name === 'Orders' && <span>{allOrders.length}</span>}
+              {name === 'Reviews' && <span>{allReviews.length}</span>}
             </button>
           ))}
         </nav>
         <div className="admin-sidebar-bottom">
           <div className="admin-avatar">MM</div>
           <strong>{user.name}</strong>
-          <small>Restaurant owner</small>
+          <small>Platform administrator</small>
           <Link to="/">
-            <ArrowLeft size={15} /> Back to restaurant
+            <ArrowLeft size={15} /> Back to marketplace
           </Link>
           <button className="account-logout" onClick={signOut}>
             <LogOut size={15} /> Sign out
@@ -196,10 +222,12 @@ export default function AdminPage() {
         </div>
       </aside>
       <main className="admin-main">
-        <Link className="platform-manage-link" to="/platform/restaurants">Manage restaurant listings <ArrowRight size={17}/></Link>
+        <Link className="platform-manage-link" to="/platform/restaurants">
+          Manage restaurant listings <ArrowRight size={17} />
+        </Link>
         <header className="admin-header">
           <div>
-            <span className="eyebrow">YOUR RESTAURANT, AT A GLANCE</span>
+            <span className="eyebrow">YOUR MARKETPLACE, AT A GLANCE</span>
             <h1>{tab === 'Overview' ? 'Dashboard' : tab}</h1>
           </div>
           <div className="admin-toolbar">
@@ -212,11 +240,13 @@ export default function AdminPage() {
           </div>
         </header>
         <DemoNote>
-          Owner workspace · Accounts and status controls are live. Payment and delivery services are
-          still simulated.
+          Platform workspace · Accounts, moderation and order controls are live. Razorpay runs in
+          Test Mode; rider delivery remains simulated.
         </DemoNote>
-        <ErrorMessage>{error || orders.error || reservations.error || catalog.error}</ErrorMessage>
-        {orders.loading || reservations.loading || catalog.loading ? (
+        <ErrorMessage>
+          {error || orders.error || reservations.error || catalog.error || reviews.error}
+        </ErrorMessage>
+        {orders.loading || reservations.loading || catalog.loading || reviews.loading ? (
           <Loading />
         ) : (
           <>
@@ -348,6 +378,8 @@ export default function AdminPage() {
                             </span>
                           </td>
                           <td>
+                            <PaymentStatus order={order} />
+                            <RefundControl order={order} onSaved={orders.reload} />
                             <StatusControl
                               key={`${order.id}-${order.status}`}
                               record={order}
@@ -407,7 +439,7 @@ export default function AdminPage() {
                 <div className="admin-catalog">
                   {dishes.map((dish) => (
                     <article key={dish.id}>
-                      <img src={dish.image} alt={dish.name} />
+                      <img src={photoUrl(dish.image)} alt={dish.name} />
                       <div>
                         <Link to={`/menu/${dish.id}`}>
                           <strong>{dish.name}</strong>
@@ -460,9 +492,44 @@ export default function AdminPage() {
                 )}
               </section>
             )}
+            {tab === 'Reviews' && (
+              <section className="admin-reviews">
+                <div className="panel-heading">
+                  <div>
+                    <h3>Verified customer reviews</h3>
+                    <p className="small-muted">
+                      Hide content that violates marketplace standards. Hidden reviews do not affect
+                      public ratings.
+                    </p>
+                  </div>
+                  <Stars
+                    rating={reviews.data.summary.rating}
+                    count={reviews.data.summary.count}
+                    label="Marketplace review rating"
+                  />
+                </div>
+                {allReviews.length ? (
+                  <div className="review-grid">
+                    {allReviews.map((review) => (
+                      <ReviewCard
+                        key={review.id}
+                        review={review}
+                        management
+                        onModerate={moderate}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="admin-empty">
+                    <MessageSquareText size={30} />
+                    <p>No verified reviews yet.</p>
+                  </div>
+                )}
+              </section>
+            )}
           </>
         )}
-        <p className="admin-footer">MenuMate Workspace · Owner access only.</p>
+        <p className="admin-footer">MenuMate Workspace · Platform administrator access only.</p>
       </main>
     </div>
   );

@@ -422,7 +422,7 @@ textarea:focus-visible {
     border-color 0.25s;
 }
 .dish-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-2px);
   box-shadow: 0 15px 35px #24351b0d;
   border-color: #cdd2c2;
 }
@@ -437,7 +437,7 @@ textarea:focus-visible {
   transition: transform 0.55s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 .dish-card:hover img {
-  transform: scale(1.055);
+  transform: scale(1.025);
 }
 .dish-info {
   padding: 16px 8px 8px;
@@ -557,7 +557,7 @@ textarea:focus-visible {
   transition: transform 0.6s;
 }
 .mood-card:hover img {
-  transform: scale(1.06);
+  transform: scale(1.025);
 }
 .mood-card:after {
   content: '';
@@ -1231,7 +1231,7 @@ kbd {
 @keyframes bag-in {
   from {
     opacity: 0;
-    transform: translateX(35px);
+    transform: translateX(16px);
   }
   to {
     opacity: 1;
@@ -1239,14 +1239,21 @@ kbd {
   }
 }
 @keyframes count-pop {
-  0% {
-    transform: scale(0.6);
+  from {
+    opacity: 0.6;
+    transform: scale(0.94);
   }
-  70% {
-    transform: scale(1.18);
-  }
-  100% {
+  to {
+    opacity: 1;
     transform: scale(1);
+  }
+}
+@keyframes page-fade {
+  from {
+    opacity: 0.65;
+  }
+  to {
+    opacity: 1;
   }
 }
 @keyframes image-in {
@@ -1261,7 +1268,7 @@ kbd {
 }
 @media (prefers-reduced-motion: no-preference) {
   .page-enter {
-    animation: surface-in 0.3s ease-out both;
+    animation: page-fade 0.16s ease-out;
   }
   .fresh-hero-copy {
     animation: surface-in 0.65s cubic-bezier(0.2, 0.7, 0.2, 1) both;
@@ -1274,33 +1281,21 @@ kbd {
   }
   .reveal {
     transition:
-      opacity 0.65s ease,
-      transform 0.65s cubic-bezier(0.2, 0.7, 0.2, 1);
+      opacity 0.32s ease,
+      transform 0.32s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
   .reveal.is-pending {
     opacity: 0;
-    transform: translateY(24px);
-  }
-  .menu-results .dish-card {
-    animation: surface-in 0.35s ease-out both;
-  }
-  .menu-results .dish-card:nth-child(2) {
-    animation-delay: 0.035s;
-  }
-  .menu-results .dish-card:nth-child(3) {
-    animation-delay: 0.07s;
-  }
-  .menu-results .dish-card:nth-child(4) {
-    animation-delay: 0.105s;
+    transform: translateY(10px);
   }
   .experience-dialog[open] {
-    animation: surface-in 0.24s ease-out;
+    animation: surface-in 0.18s ease-out;
   }
   .bag-dialog[open] {
-    animation: bag-in 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
+    animation: bag-in 0.22s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
   .cart-count {
-    animation: count-pop 0.3s ease-out;
+    animation: count-pop 0.18s ease-out;
   }
   .floating-bag {
     animation: surface-in 0.3s ease-out;
@@ -1963,4 +1958,41 @@ kbd {
   .main-nav > .mobile-account-nav {
     display: block;
   }
+}
+.payment-status-note {
+  display: grid;
+  gap: 5px;
+  margin-block: 14px;
+  padding: 14px 16px;
+  border: 1px solid #dce6d4;
+  border-radius: 10px;
+  background: #f2f7ed;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.payment-status-note strong {
+  font-size: 13px;
+}
+.payment-status-note small {
+  display: block;
+  font-weight: 400;
+  color: #626f59;
+}
+.payment-status-note > span {
+  font-size: 11px;
+}
+.payment-status-note p {
+  margin: 0;
+  font-size: 12px;
+}
+.refund-control p,
+.payment-recovery p {
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+.refund-control .text-link {
+  margin: 10px;
+}
+.payment-recovery {
+  padding-block: 14px;
 }

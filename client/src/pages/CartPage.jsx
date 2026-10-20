@@ -1,3 +1,4 @@
+import { photoUrl } from '../services/photos.js';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Trash2, ShieldCheck, ShoppingBag } from 'lucide-react';
 import { useStore } from '../context/store.js';
@@ -40,7 +41,7 @@ export default function CartPage() {
               return (
                 <article className="cart-item" key={item.key}>
                   <Link to={`/menu/${dish.id}`}>
-                    <img src={dish.image} alt={dish.name} />
+                    <img src={photoUrl(dish.image)} alt={dish.name} />
                   </Link>
                   <div className="cart-item-info">
                     <h3>

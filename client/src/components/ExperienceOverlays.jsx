@@ -1,4 +1,5 @@
-﻿import { useEffect, useRef, useState, useId } from 'react';
+import { photoUrl } from '../services/photos.js';
+import { useLayoutEffect, useRef, useState, useId } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   X,
@@ -19,9 +20,11 @@ export default function ExperienceOverlays() {
   const ref = useRef(null);
   const titleId = useId();
   const type = overlay?.type;
-  useEffect(() => {
+  const isOpen = Boolean(type);
+  const backdropStart = useRef(false);
+  useLayoutEffect(() => {
     const dialog = ref.current;
-    if (!type) return;
+    if (!isOpen) return;
     const previous = document.activeElement;
     const overflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -29,9 +32,29 @@ export default function ExperienceOverlays() {
     return () => {
       dialog.close();
       document.body.style.overflow = overflow;
-      if (previous?.isConnected) previous.focus();
+      if (previous?.isConnected) previous.focus({ preventScroll: true });
     };
-  }, [type]);
+  }, [isOpen]);
+  useLayoutEffect(() => {
+    if (!type) return;
+    const dialog = ref.current;
+    dialog.scrollTop = 0;
+    const target = type === 'search' ? dialog.querySelector('input') : dialog.querySelector('h2');
+    if (target) {
+      if (type !== 'search') target.tabIndex = -1;
+      target.focus({ preventScroll: true });
+    }
+  }, [type, overlay?.id]);
+  function isBackdrop(event) {
+    if (event.target !== event.currentTarget) return false;
+    const rect = event.currentTarget.getBoundingClientRect();
+    return (
+      event.clientX < rect.left ||
+      event.clientX > rect.right ||
+      event.clientY < rect.top ||
+      event.clientY > rect.bottom
+    );
+  }
   const close = () => setOverlay(null);
   return (
     <dialog
@@ -39,8 +62,12 @@ export default function ExperienceOverlays() {
       className={`experience-dialog ${type === 'bag' ? 'bag-dialog' : ''} ${type === 'search' ? 'search-dialog' : ''}`}
       aria-labelledby={titleId}
       onCancel={close}
+      onPointerDown={(event) => {
+        backdropStart.current = isBackdrop(event);
+      }}
       onClick={(event) => {
-        if (event.target === event.currentTarget) close();
+        if (backdropStart.current && isBackdrop(event)) close();
+        backdropStart.current = false;
       }}
     >
       {overlay && (
@@ -48,7 +75,27 @@ export default function ExperienceOverlays() {
           <button className="dialog-close icon-button" onClick={close} aria-label="Close dialog">
             <X size={21} />
           </button>
-          {type === 'switch' && <div className="switch-restaurant"><span className="eyebrow">A FRESH START?</span><h2 id={titleId}>Switch restaurants?</h2><p>Your bag contains dishes from {cart[0]?.dish?.restaurantName}. Starting an order from {overlay.restaurantName} will replace them.</p><button className="button" onClick={()=>{if(addItems(overlay.items,true))setOverlay({type:'bag'});}}>Start a new bag</button><button className="button secondary" onClick={close}>Keep current bag</button></div>}
+          {type === 'switch' && (
+            <div className="switch-restaurant">
+              <span className="eyebrow">A FRESH START?</span>
+              <h2 id={titleId}>Switch restaurants?</h2>
+              <p>
+                Your bag contains dishes from {cart[0]?.dish?.restaurantName}. Starting an order
+                from {overlay.restaurantName} will replace them.
+              </p>
+              <button
+                className="button"
+                onClick={() => {
+                  if (addItems(overlay.items, true)) setOverlay({ type: 'bag' });
+                }}
+              >
+                Start a new bag
+              </button>
+              <button className="button secondary" onClick={close}>
+                Keep current bag
+              </button>
+            </div>
+          )}
           {type === 'dish' && (
             <QuickDish key={overlay.id} id={overlay.id} titleId={titleId} close={close} />
           )}
@@ -67,11 +114,11 @@ function QuickDish({ id, titleId, close }) {
   const [quantity, setQuantity] = useState(1);
   if (!dish) return <h2 id={titleId}>This dish is unavailable.</h2>;
   const available = catalog.find((item) => item.id === id)?.available !== false;
-  const price = itemPrice({ dishId: id, size, extras: selected },catalog) * quantity;
+  const price = itemPrice({ dishId: id, size, extras: selected }, catalog) * quantity;
   return (
     <div className="quick-dish-layout">
       <div className="quick-dish-photo">
-        <img src={dish.image} alt={dish.name} />
+        <img src={photoUrl(dish.image)} alt={dish.name} />
         <span>
           {dish.veg ? <Leaf size={15} /> : <ShoppingBag size={15} />}{' '}
           {dish.veg ? 'Vegetarian' : 'Non-vegetarian'}
@@ -80,6 +127,9 @@ function QuickDish({ id, titleId, close }) {
       <div className="quick-dish-details">
         <span className="eyebrow">{dish.category} / MADE YOUR WAY</span>
         <h2 id={titleId}>{dish.name}</h2>
+        {dish.samplePhoto && (
+          <small className="sample-photo-label">Demo dish / illustrative photo</small>
+        )}
         <p>{dish.description}</p>
         <fieldset className="quick-portions">
           <legend>Choose your portion</legend>
@@ -94,7 +144,9 @@ function QuickDish({ id, titleId, close }) {
               />
               <span>
                 {value === 'regular' ? 'Regular' : 'Large'}
-                <strong>{money(itemPrice({ dishId: id, size: value, extras: [] },catalog))}</strong>
+                <strong>
+                  {money(itemPrice({ dishId: id, size: value, extras: [] }, catalog))}
+                </strong>
               </span>
               {size === value && <Check size={17} />}
             </label>
@@ -126,7 +178,7 @@ function QuickDish({ id, titleId, close }) {
             className="button"
             disabled={!available}
             onClick={() => {
-              if(addItem(id, size, selected, quantity)) setOverlay({ type: 'bag' });
+              if (addItem(id, size, selected, quantity)) setOverlay({ type: 'bag' });
             }}
           >
             {available ? (
@@ -146,7 +198,7 @@ function QuickDish({ id, titleId, close }) {
   );
 }
 function Bag({ titleId, close }) {
-  const { cart, updateQuantity, catalog } = useStore();
+  const { cart, updateQuantity, catalog, catalogLoading } = useStore();
   const count = cart.reduce((sum, item) => sum + item.quantity, 0);
   return (
     <div className="bag-content">
@@ -156,7 +208,9 @@ function Bag({ titleId, close }) {
           Your bag <span>({count})</span>
         </h2>
       </div>
-      {cart.length>0 && <p className="bag-restaurant">From {cart[0].dish?.restaurantName || 'MenuMate Kitchen'}</p>}
+      {cart.length > 0 && (
+        <p className="bag-restaurant">From {cart[0].dish?.restaurantName || 'MenuMate Kitchen'}</p>
+      )}
       {!cart.length ? (
         <div className="bag-empty">
           <ShoppingBag size={52} strokeWidth={1.2} />
@@ -172,10 +226,10 @@ function Bag({ titleId, close }) {
             {cart.map((item) => {
               const dish = catalog.find((entry) => entry.id === item.dishId) || item.dish;
               const soldOut =
-                catalog.find((entry) => entry.id === item.dishId)?.available === false;
+                !catalogLoading && !catalog.find((entry) => entry.id === item.dishId)?.available;
               return (
                 <article className="bag-item" key={item.key}>
-                  <img src={dish.image} alt="" />
+                  <img src={photoUrl(dish.image)} alt="" />
                   <div>
                     <Link to={`/menu/${dish.id}`} onClick={close}>
                       <h3>{dish.name}</h3>
@@ -266,7 +320,7 @@ function QuickSearch({ titleId, close }) {
         {results.length ? (
           results.slice(0, 6).map((dish) => (
             <Link key={dish.id} to={`/menu/${dish.id}`} onClick={close}>
-              <img src={dish.image} alt="" />
+              <img src={photoUrl(dish.image)} alt="" />
               <span>
                 <strong>{dish.name}</strong>
                 <small>

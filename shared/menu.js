@@ -1,4 +1,7 @@
-export const menu = [
+import { demoRestaurants, legacyRestaurant } from './restaurants.js';
+import { additionalDemoDishes } from './demoMenu.js';
+
+const originalMenu = [
   {
     id: 'margherita',
     name: 'Margherita Pizza',
@@ -105,6 +108,24 @@ export const menu = [
   },
 ];
 
+export const menu = [...originalMenu, ...additionalDemoDishes].map((dish) => {
+  const restaurant =
+    demoRestaurants.find((venue) => venue.id === dish.restaurantId) || legacyRestaurant;
+  return {
+    ...dish,
+    restaurantId: restaurant.id,
+    restaurantName: restaurant.name,
+    restaurantCity: restaurant.city,
+    restaurantAddress: restaurant.address,
+    restaurantImage: restaurant.image,
+    deliveryFee: restaurant.deliveryFee,
+    minOrder: restaurant.minOrder,
+    etaMin: restaurant.etaMin,
+    etaMax: restaurant.etaMax,
+    demo: true,
+  };
+});
+
 export const categories = [
   'All Dishes',
   'Starters',
@@ -125,15 +146,21 @@ export const money = (value) =>
     currency: 'INR',
     maximumFractionDigits: 0,
   }).format(value);
-export const cartDish = (item, catalog = menu) => catalog.find(dish=>dish.id===item.dishId) || item.dish;
+export const cartDish = (item, catalog = menu) =>
+  catalog.find((dish) => dish.id === item.dishId) || item.dish;
 export const itemPrice = (item, catalog) =>
-  ((catalog ? catalog.find(dish=>dish.id===item.dishId) : item.dish || menu.find(dish=>dish.id===item.dishId))?.price || 0) +
+  ((catalog
+    ? catalog.find((dish) => dish.id === item.dishId)
+    : item.dish || menu.find((dish) => dish.id === item.dishId)
+  )?.price || 0) +
   (item.size === 'large' ? 100 : 0) +
-  extras.filter(extra=>item.extras?.includes(extra.id)).reduce((sum,extra)=>sum+extra.price,0);
+  extras
+    .filter((extra) => item.extras?.includes(extra.id))
+    .reduce((sum, extra) => sum + extra.price, 0);
 export function totals(items, fulfillment = 'delivery', catalog, deliveryFee) {
-  const subtotal=items.reduce((sum,item)=>sum+itemPrice(item,catalog)*item.quantity,0);
-  const fee=deliveryFee ?? items[0]?.dish?.deliveryFee ?? 50;
-  const delivery=subtotal && fulfillment==='delivery' ? fee : 0;
-  const tax=Math.round((subtotal+delivery)*0.05);
-  return {subtotal,delivery,tax,total:subtotal+delivery+tax};
+  const subtotal = items.reduce((sum, item) => sum + itemPrice(item, catalog) * item.quantity, 0);
+  const fee = deliveryFee ?? items[0]?.dish?.deliveryFee ?? 50;
+  const delivery = subtotal && fulfillment === 'delivery' ? fee : 0;
+  const tax = Math.round((subtotal + delivery) * 0.05);
+  return { subtotal, delivery, tax, total: subtotal + delivery + tax };
 }

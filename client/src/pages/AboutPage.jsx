@@ -1,4 +1,56 @@
 ﻿import { Link } from 'react-router-dom';
 import { ArrowUpRight, Store, ShoppingBag, Heart } from 'lucide-react';
 import Reveal from '../components/Reveal.jsx';
-export default function AboutPage(){return <div className="container page-space platform-about"><Reveal className="partner-welcome"><div><span className="eyebrow">A BIGGER TABLE FOR EVERYONE</span><h1>Good food connects us.<br/><span>We connect you to it.</span></h1><p>MenuMate is a marketplace for local restaurants and people who love discovering their next favourite meal.</p><Link className="button" to="/restaurants">Explore restaurants <ArrowUpRight size={18}/></Link></div><img src="/images/design/restaurant.jpg" alt="A warm restaurant space"/></Reveal><div className="platform-values">{[[Store,'For local kitchens','Create a storefront, add your menu, choose your availability and manage your own orders.'],[ShoppingBag,'For everyday cravings','Browse by city and cuisine, customise your bag and see the cost before you check out.'],[Heart,'Built around trust','Restaurant estimates are labelled. Status updates come from owners. Sample content is identified.']].map(([Icon,title,text])=><Reveal className="panel" key={title}><Icon size={28}/><h2>{title}</h2><p>{text}</p></Reveal>)}</div><div className="workspace-notice">MenuMate is currently a development preview. Payments are simulated and rider dispatch is not connected.</div></div>;}
+export default function AboutPage() {
+  return (
+    <div className="container page-space platform-about">
+      <Reveal className="partner-welcome">
+        <div>
+          <span className="eyebrow">A BIGGER TABLE FOR EVERYONE</span>
+          <h1>
+            Good food connects us.
+            <br />
+            <span>We connect you to it.</span>
+          </h1>
+          <p>
+            MenuMate is a marketplace for local restaurants and people who love discovering their
+            next favourite meal.
+          </p>
+          <Link className="button" to="/restaurants">
+            Explore restaurants <ArrowUpRight size={18} />
+          </Link>
+        </div>
+        <img src="/images/design/restaurant.jpg" alt="A warm restaurant space" />
+      </Reveal>
+      <div className="platform-values">
+        {[
+          [
+            Store,
+            'For local kitchens',
+            'Create a storefront, add your menu, choose your availability and manage your own orders.',
+          ],
+          [
+            ShoppingBag,
+            'For everyday cravings',
+            'Browse by city and cuisine, customise your bag and see the cost before you check out.',
+          ],
+          [
+            Heart,
+            'Built around trust',
+            'Restaurant estimates are labelled. Status updates come from owners. Sample content is identified.',
+          ],
+        ].map(([Icon, title, text]) => (
+          <Reveal className="panel" key={title}>
+            <Icon size={28} />
+            <h2>{title}</h2>
+            <p>{text}</p>
+          </Reveal>
+        ))}
+      </div>
+      <div className="workspace-notice">
+        MenuMate is currently a development preview. Razorpay is available only in Test Mode, and
+        rider dispatch is not connected.
+      </div>
+    </div>
+  );
+}

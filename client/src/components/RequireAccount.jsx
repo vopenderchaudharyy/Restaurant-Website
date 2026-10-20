@@ -25,10 +25,10 @@ export default function RequireAccount({ children, admin = false }) {
   if (admin && user.role !== 'admin')
     return (
       <EmptyState
-        title="Owner access required"
-        text="Your account is a customer account. Only an owner can manage the restaurant."
-        to="/account"
-        action="Back to my account"
+        title="Platform admin access required"
+        text="This page is for platform administrators. Restaurant owners can manage their own restaurant in the partner workspace."
+        to="/partner"
+        action="Open restaurant workspace"
       />
     );
   return children;

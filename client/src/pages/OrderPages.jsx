@@ -1,3 +1,6 @@
+import { PaymentStatus } from '../components/PaymentStatus.jsx';
+import OrderReview from '../components/OrderReview.jsx';
+import { photoUrl } from '../services/photos.js';
 import { Link, useParams } from 'react-router-dom';
 import {
   PackageCheck,
@@ -45,7 +48,7 @@ export function OrderConfirmationPage() {
       </p>
       <div className="confirmation-card">
         <div className="receipt-line">
-          <span>{order.restaurantName || 'MenuMate Kitchen'} ? Order ID</span>
+          <span>{order.restaurantName || 'MenuMate Kitchen'} / Order ID</span>
           <strong>#{order.id.slice(0, 11).toUpperCase()}</strong>
         </div>
         <div className="delivery-estimate">
@@ -65,8 +68,11 @@ export function OrderConfirmationPage() {
           <strong>{money(order.totals.total)}</strong>
         </div>
       </div>
+      <PaymentStatus order={order} />
       <DemoNote>
-        This is a demo order. No payment was collected and no food will be dispatched.
+        {order.payment === 'razorpay'
+          ? 'Razorpay Test Mode payment. No real money or food delivery.'
+          : 'This is a demo order. No payment was collected and no food will be dispatched.'}
       </DemoNote>
       <div className="confirmation-actions">
         <ButtonLink to="/menu" secondary>
@@ -107,9 +113,10 @@ export function OrderTrackingPage() {
         </p>
       </div>
       <DemoNote>
-        Order status refreshes every 15 seconds when the owner updates it. This demo does not
-        include live courier location tracking.
+        Order status refreshes every 15 seconds when the restaurant updates it. Live courier
+        location tracking is not connected.
       </DemoNote>
+      <PaymentStatus order={order} />
       <div className="tracking-grid">
         <section className="panel">
           <h2>Your order’s journey</h2>
@@ -162,7 +169,10 @@ export function OrderTrackingPage() {
         </section>
         <div>
           <div className="tracking-art">
-            <img src={order.restaurantImage || "/images/design/restaurant.jpg"} alt={order.restaurantName || "Restaurant"} />
+            <img
+              src={photoUrl(order.restaurantImage || '/images/design/restaurant.jpg')}
+              alt={order.restaurantName || 'Restaurant'}
+            />
             <div>
               <MapPin size={24} />
               <strong>{order.restaurantName || 'MenuMate Kitchen'}</strong>
@@ -183,6 +193,7 @@ export function OrderTrackingPage() {
           </div>
         </div>
       </div>
+      {['Delivered', 'Collected'].includes(order.status) && <OrderReview orderId={order.id} />}
     </div>
   );
 }

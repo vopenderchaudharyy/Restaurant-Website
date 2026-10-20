@@ -1,3 +1,4 @@
+import { photoUrl } from '../services/photos.js';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
@@ -71,7 +72,7 @@ export function DishCard({ dish }) {
     <article className="dish-card">
       <div className="dish-photo">
         <Link to={`/menu/${dish.id}`} aria-label={`View ${dish.name}`}>
-          <img src={dish.image} alt={dish.name} loading="lazy" />
+          <img src={photoUrl(dish.image)} alt={dish.name} loading="lazy" />
         </Link>
         <button
           className="quick-view"
@@ -91,7 +92,14 @@ export function DishCard({ dish }) {
         </button>
       </div>
       <div className="dish-info">
-        {dish.restaurantId && <Link className="dish-restaurant" to={`/restaurants/${dish.restaurantId}`}>{dish.restaurantName}</Link>}
+        {dish.restaurantId && (
+          <Link className="dish-restaurant" to={`/restaurants/${dish.restaurantId}`}>
+            {dish.restaurantName}
+          </Link>
+        )}
+        {dish.samplePhoto && (
+          <small className="sample-photo-label">Demo dish / illustrative photo</small>
+        )}
         <div className="dish-title">
           <h3>
             <Link to={`/menu/${dish.id}`}>{dish.name}</Link>
@@ -106,7 +114,7 @@ export function DishCard({ dish }) {
         <div className="rating">
           <Star size={13} fill="currentColor" />
           <b>{dish.rating || 'New'}</b>
-          {dish.reviews>0 && <span>({dish.reviews} demo ratings)</span>}
+          {dish.reviews > 0 && <span>({dish.reviews} demo ratings)</span>}
         </div>
         <div className="dish-bottom">
           <strong>{money(dish.price)}</strong>

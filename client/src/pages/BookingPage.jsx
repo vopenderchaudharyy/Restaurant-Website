@@ -52,6 +52,10 @@ export default function BookingPage() {
           <div className="centered-heading light">
             <span className="eyebrow light">THERE’S A PLACE FOR YOU HERE</span>
             <h1>Reserve your table.</h1>
+            <p>
+              MenuMate Kitchen demo bookings only. Partner restaurant reservations are not available
+              yet.
+            </p>
             <p>Good company deserves a great setting. Let’s make it special.</p>
           </div>
           <form className="booking-form" onSubmit={submit}>

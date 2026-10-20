@@ -32,6 +32,8 @@ export function useResource(path, { pollMs = 0 } = {}) {
   }, [path, version, pollMs]);
   return {
     ...state,
+    updateData: (updater) =>
+      setState((previous) => ({ ...previous, data: updater(previous.data) })),
     reload: () => {
       setState({ data: null, error: '', loading: true });
       setVersion((value) => value + 1);

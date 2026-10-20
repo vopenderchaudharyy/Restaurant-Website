@@ -14,4 +14,7 @@ export const env = {
   port,
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://127.0.0.1:5173',
   mongodbUri: process.env.MONGODB_URI?.trim() || '',
+  razorpayKeyId: process.env.RAZORPAY_KEY_ID?.trim() || '',
+  razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET?.trim() || '',
+  razorpayWebhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET?.trim() || '',
 };

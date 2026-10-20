@@ -5,6 +5,9 @@ import { env } from '../config/env.js';
 import User from '../models/User.js';
 import Session from '../models/Session.js';
 import MenuAvailability from '../models/MenuAvailability.js';
+import Restaurant from '../models/Restaurant.js';
+import MenuItem from '../models/MenuItem.js';
+import PaymentAttempt from '../models/PaymentAttempt.js';
 import recordModel from '../models/Record.js';
 
 // Copy only missing IDs; never replace existing database records or remove the source file.
@@ -15,6 +18,9 @@ try {
   );
   await connectDatabase();
   const groups = [
+    [Restaurant, Object.values(source.restaurants || {})],
+    [MenuItem, Object.values(source.menuItems || {})],
+    [PaymentAttempt, Object.values(source.paymentAttempts || {})],
     [User, Object.values(source.users || {})],
     [
       Session,
@@ -24,7 +30,7 @@ try {
       MenuAvailability,
       Object.entries(source.availability || {}).map(([id, available]) => ({ id, available })),
     ],
-    ...['order', 'reservation', 'message'].map((kind) => [
+    ...['order', 'reservation', 'message', 'review'].map((kind) => [
       recordModel(kind),
       Object.values(source.records || {})
         .filter((item) => item.kind === kind)
@@ -39,6 +45,13 @@ try {
   for (const [Model, records] of groups) {
     for (const record of records) {
       await new Model(record).validate();
+      if (Model === Restaurant) {
+        const existing = await Restaurant.findOne({ ownerId: record.ownerId }).lean();
+        if (existing && existing.id !== record.id)
+          throw new Error(
+            'Migration stopped: this owner already has a different restaurant in MongoDB.',
+          );
+      }
       if (Model === User) {
         const existing = await User.findOne({ email: record.email }).lean();
         if (existing && existing.id !== record.id)

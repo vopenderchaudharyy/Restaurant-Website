@@ -1,3 +1,6 @@
+import { PaymentStatus } from '../components/PaymentStatus.jsx';
+import OrderReview from '../components/OrderReview.jsx';
+import { photoUrl } from '../services/photos.js';
 import { useState } from 'react';
 import { Link, NavLink, useParams, useNavigate } from 'react-router-dom';
 import {
@@ -47,7 +50,7 @@ export default function AccountPage() {
             </span>
             <strong>{user.name}</strong>
             <small>
-              {user.role === 'admin' ? 'Restaurant owner' : 'Your little corner of MenuMate'}
+              {user.role === 'admin' ? 'Platform administrator' : 'Your little corner of MenuMate'}
             </small>
           </div>
           <nav aria-label="Account navigation">
@@ -58,7 +61,10 @@ export default function AccountPage() {
                 <span>›</span>
               </NavLink>
             ))}
-            <Link to="/partner"><LayoutDashboard size={18}/>Restaurant workspace</Link>
+            <Link to="/partner">
+              <LayoutDashboard size={18} />
+              Restaurant workspace
+            </Link>
             {user.role === 'admin' && (
               <Link to="/admin">
                 <LayoutDashboard size={18} />
@@ -137,7 +143,7 @@ function ProfileForm() {
           <p>{user.email}</p>
         </div>
         <span className="pill">
-          {user.role === 'admin' ? 'Restaurant owner' : 'Food enthusiast'}
+          {user.role === 'admin' ? 'Platform administrator' : 'Food enthusiast'}
         </span>
       </div>
       <form className="profile-form" onSubmit={submit}>
@@ -336,21 +342,26 @@ export function OrdersList() {
           {orders.map((order) => (
             <article className="order-history-card" key={order.id}>
               <div className="order-history-top">
-                <strong>{order.restaurantName || 'MenuMate Kitchen'} ? #{order.id.slice(0, 11).toUpperCase()}</strong>
+                <strong>
+                  {order.restaurantName || 'MenuMate Kitchen'} / #
+                  {order.id.slice(0, 11).toUpperCase()}
+                </strong>
                 <span className={`status-badge ${order.status === 'Cancelled' ? 'cancelled' : ''}`}>
                   {order.status}
                 </span>
               </div>
               <p className="small-muted">
-                {new Date(order.createdAt).toLocaleDateString('en-IN')} · {order.fulfillment} · Demo
-                payment
+                {new Date(order.createdAt).toLocaleDateString('en-IN')} · {order.fulfillment} ·{' '}
+                {order.payment === 'razorpay' ? 'Razorpay test payment' : 'Demo payment'}
               </p>
               <div className="order-history-body">
                 <div className="order-thumbnails">
                   {order.items.slice(0, 3).map((item, index) => (
                     <img
                       key={index}
-                      src={item.dish?.image || menu.find((dish) => dish.id === item.dishId)?.image}
+                      src={photoUrl(
+                        item.dish?.image || menu.find((dish) => dish.id === item.dishId)?.image,
+                      )}
                       alt={item.name}
                     />
                   ))}
@@ -360,13 +371,9 @@ export function OrdersList() {
                   <strong>{money(order.totals.total)}</strong>
                 </div>
               </div>
+              <PaymentStatus order={order} />
               <div className="order-history-actions">
-                <button
-                  className="text-link"
-                  onClick={() =>
-                    addItems(order.items)
-                  }
-                >
+                <button className="text-link" onClick={() => addItems(order.items)}>
                   Order again
                 </button>
                 <Link className="text-link" to={`/orders/${order.id}/tracking`}>
@@ -379,6 +386,9 @@ export function OrdersList() {
                   label="Cancel order"
                   onSuccess={reload}
                 />
+              )}
+              {['Delivered', 'Collected'].includes(order.status) && (
+                <OrderReview orderId={order.id} compact />
               )}
             </article>
           ))}

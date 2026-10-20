@@ -4,7 +4,7 @@ const recordSchema = new mongoose.Schema(
   {
     id: { type: String, required: true, unique: true },
     owner: { type: String, required: true, index: true },
-    kind: { type: String, enum: ['order', 'reservation', 'message'], required: true },
+    kind: { type: String, enum: ['order', 'reservation', 'message', 'review'], required: true },
     data: { type: mongoose.Schema.Types.Mixed, required: true },
   },
   { timestamps: true },
@@ -16,6 +16,7 @@ const models = {
   order: mongoose.model('Order', recordSchema.clone(), 'orders'),
   reservation: mongoose.model('Reservation', recordSchema.clone(), 'reservations'),
   message: mongoose.model('Message', recordSchema.clone(), 'messages'),
+  review: mongoose.model('Review', recordSchema.clone(), 'reviews'),
 };
 export const recordModels = Object.values(models);
 export default function recordModel(kind) {

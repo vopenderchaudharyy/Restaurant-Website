@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Link, NavLink, Outlet, useLocation, useNavigationType } from 'react-router-dom';
 import {
   ChefHat,
   Search,
@@ -15,6 +15,7 @@ import {
 import { useStore } from '../../context/store.js';
 import ExperienceOverlays from '../ExperienceOverlays.jsx';
 import { useAuth } from '../../context/auth.js';
+import { staticDemoMode } from '../../services/api.js';
 
 const navigation = [
   ['/', 'Home'],
@@ -27,11 +28,39 @@ export default function SiteLayout() {
   const { cart, setOverlay } = useStore();
   const { user } = useAuth();
   const location = useLocation();
+  const navigationType = useNavigationType();
+  const mainRef = useRef(null);
+  const headerRef = useRef(null);
+  const menuToggleRef = useRef(null);
   const [open, setOpen] = useState(false);
   const count = cart.reduce((sum, item) => sum + item.quantity, 0);
-  useEffect(() => {
+  useLayoutEffect(() => {
+    // Preserve native Back/Forward restoration; only new navigation starts at the top.
+    if (location.hash || navigationType === 'POP') return;
     window.scrollTo({ top: 0, behavior: 'instant' });
-  }, [location.pathname]);
+    mainRef.current?.focus({ preventScroll: true });
+  }, [location.key, location.hash, navigationType]);
+  useEffect(() => {
+    if (!open) return;
+    const escape = (event) => {
+      if (event.key === 'Escape') {
+        setOpen(false);
+        menuToggleRef.current?.focus({ preventScroll: true });
+      }
+    };
+    const outside = (event) => {
+      if (!headerRef.current?.contains(event.target)) setOpen(false);
+    };
+    const back = () => setOpen(false);
+    document.addEventListener('keydown', escape);
+    document.addEventListener('pointerdown', outside);
+    window.addEventListener('popstate', back);
+    return () => {
+      document.removeEventListener('keydown', escape);
+      document.removeEventListener('pointerdown', outside);
+      window.removeEventListener('popstate', back);
+    };
+  }, [open]);
   useEffect(() => {
     const search = (event) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
@@ -47,7 +76,13 @@ export default function SiteLayout() {
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <header className="site-header">
+      <header
+        ref={headerRef}
+        className="site-header"
+        onClick={(event) => {
+          if (event.target.closest('a')) setOpen(false);
+        }}
+      >
         <div className="header-inner">
           <Link className="brand" to="/" onClick={() => setOpen(false)}>
             <span className="brand-mark">
@@ -55,7 +90,11 @@ export default function SiteLayout() {
             </span>
             MenuMate<span className="brand-dot">.</span>
           </Link>
-          <nav className={`main-nav ${open ? 'is-open' : ''}`} aria-label="Main navigation">
+          <nav
+            id="main-navigation"
+            className={`main-nav ${open ? 'is-open' : ''}`}
+            aria-label="Main navigation"
+          >
             {navigation.map(([path, label]) => (
               <NavLink key={path} to={path} end={path === '/'} onClick={() => setOpen(false)}>
                 {label}
@@ -63,6 +102,9 @@ export default function SiteLayout() {
             ))}
             <NavLink className="mobile-account-nav" to="/account" onClick={() => setOpen(false)}>
               {user ? 'My account' : 'Sign in'}
+            </NavLink>
+            <NavLink className="mobile-account-nav" to="/partner" onClick={() => setOpen(false)}>
+              Restaurant workspace
             </NavLink>
           </nav>
           <div className="header-actions">
@@ -100,6 +142,8 @@ export default function SiteLayout() {
               Partner with us <ArrowUpRight size={16} />
             </Link>
             <button
+              ref={menuToggleRef}
+              aria-controls="main-navigation"
               className="icon-button mobile-toggle"
               onClick={() => setOpen(!open)}
               aria-label={open ? 'Close navigation' : 'Open navigation'}
@@ -110,7 +154,15 @@ export default function SiteLayout() {
           </div>
         </div>
       </header>
-      <main id="main">
+      {staticDemoMode && (
+        <div className="deployment-notice" role="status">
+          <strong>Marketplace preview</strong>
+          <span>
+            Browsing is available. Accounts and live ordering need the connected MenuMate API.
+          </span>
+        </div>
+      )}
+      <main id="main" tabIndex={-1} ref={mainRef}>
         <div className="page-enter" key={location.pathname + location.search}>
           <Outlet />
         </div>
@@ -148,7 +200,7 @@ export default function SiteLayout() {
               Filter by city and cuisine
             </p>
             <span className="footer-hours">
-              <Clock size={14} /> Daily · 11 AM – 11 PM
+              <Clock size={14} /> Availability is set by each restaurant
             </span>
           </div>
           <div>

@@ -10,3 +10,4 @@ server/.data/
 
 .tools/
 server/.mongodb/
+server/.uploads/

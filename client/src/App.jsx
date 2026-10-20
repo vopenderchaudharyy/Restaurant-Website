@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom';
 import SiteLayout from './components/layout/SiteLayout.jsx';
+import PartnerLayout from './components/layout/PartnerLayout.jsx';
 import HomePage, { RestaurantsPage, RestaurantPage } from './pages/MarketplacePage.jsx';
 import PartnerPage, { PlatformRestaurantsPage } from './pages/PartnerPage.jsx';
 import MenuPage from './pages/MenuPage.jsx';
@@ -21,12 +22,27 @@ import RequireAccount from './components/RequireAccount.jsx';
 export default function App() {
   return (
     <Routes>
+      <Route
+        element={
+          <RequireAccount>
+            <PartnerLayout />
+          </RequireAccount>
+        }
+      >
+        <Route path="partner" element={<PartnerPage />} />
+      </Route>
       <Route element={<SiteLayout />}>
         <Route index element={<HomePage />} />
-        <Route path="restaurants" element={<RestaurantsPage/>}/>
-        <Route path="restaurants/:id" element={<RestaurantPage/>}/>
-        <Route path="partner" element={<RequireAccount><PartnerPage/></RequireAccount>}/>
-        <Route path="platform/restaurants" element={<RequireAccount admin><PlatformRestaurantsPage/></RequireAccount>}/>
+        <Route path="restaurants" element={<RestaurantsPage />} />
+        <Route path="restaurants/:id" element={<RestaurantPage />} />
+        <Route
+          path="platform/restaurants"
+          element={
+            <RequireAccount admin>
+              <PlatformRestaurantsPage />
+            </RequireAccount>
+          }
+        />
         <Route path="menu" element={<MenuPage />} />
         <Route path="menu/:id" element={<DishPage />} />
         <Route path="cart" element={<CartPage />} />

@@ -1,6 +1,6 @@
 ﻿import { useCallback, useEffect, useRef, useState } from 'react';
 import { AuthContext } from './auth.js';
-import { apiRequest } from '../services/api.js';
+import { apiRequest, staticDemoMode } from '../services/api.js';
 
 export default function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -18,7 +18,10 @@ export default function AuthProvider({ children }) {
         setError('');
       }
     } catch (failure) {
-      if (version === generation.current) setError(failure.message);
+      if (version === generation.current) {
+        setUser(null);
+        setError(staticDemoMode ? '' : failure.message);
+      }
     } finally {
       if (version === generation.current) setLoading(false);
     }
