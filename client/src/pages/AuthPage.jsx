@@ -116,6 +116,12 @@ export default function AuthPage({ register = false }) {
             {busy ? 'One moment…' : register ? 'Create account' : 'Sign in'}
             <ArrowRight size={17} />
           </button>
+          {register && (
+            <p className="legal-consent">
+              By creating an account, you agree to the <Link to="/terms">Terms of Use</Link> and
+              acknowledge the <Link to="/privacy">Privacy Policy</Link>.
+            </p>
+          )}
         </form>
         <p className="auth-switch">
           {register ? 'Already have an account?' : 'New around here?'}{' '}

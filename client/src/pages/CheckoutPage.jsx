@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Bike, ShoppingBag, Utensils, Clock, ArrowRight } from 'lucide-react';
 import { useStore } from '../context/store.js';
 import { money, totals } from '../../../shared/menu.js';
@@ -141,7 +141,11 @@ export default function CheckoutPage() {
           <button className="button full-width" type="submit" disabled={belowMinimum}>
             Continue to payment <ArrowRight size={17} />
           </button>
-          <p className="small-muted">You can review your order before placing it.</p>
+          <p className="small-muted legal-checkout-note">
+            You can review your order before placing it. See our{' '}
+            <Link to="/cancellation-refunds">Cancellation &amp; Refund Policy</Link> and{' '}
+            <Link to="/delivery-policy">Delivery Policy</Link>.
+          </p>
         </aside>
       </form>
     </div>

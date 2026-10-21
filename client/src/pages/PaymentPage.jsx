@@ -324,6 +324,10 @@ export default function PaymentPage() {
                   ? 'Continue to Razorpay'
                   : 'Place demo order'}
           </button>
+          <p className="small-muted legal-checkout-note">
+            By placing the order, you agree to the <Link to="/terms">Terms of Use</Link> and
+            applicable <Link to="/cancellation-refunds">cancellation terms</Link>.
+          </p>
           <Link className="back-link centered" to="/cart">
             <ArrowLeft size={14} /> Back to cart
           </Link>

@@ -18,6 +18,14 @@ import AccountPage from './pages/AccountPage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
 import AuthPage from './pages/AuthPage.jsx';
 import { ForgotPasswordPage, ResetPasswordPage } from './pages/PasswordRecoveryPage.jsx';
+import {
+  CancellationRefundPage,
+  DeliveryPolicyPage,
+  GrievancePage,
+  LegalCentrePage,
+  PrivacyPage,
+  TermsPage,
+} from './pages/LegalPages.jsx';
 import RequireAccount from './components/RequireAccount.jsx';
 
 export default function App() {
@@ -109,6 +117,12 @@ export default function App() {
         />
         <Route path="about" element={<AboutPage />} />
         <Route path="contact" element={<ContactPage />} />
+        <Route path="legal" element={<LegalCentrePage />} />
+        <Route path="terms" element={<TermsPage />} />
+        <Route path="privacy" element={<PrivacyPage />} />
+        <Route path="cancellation-refunds" element={<CancellationRefundPage />} />
+        <Route path="delivery-policy" element={<DeliveryPolicyPage />} />
+        <Route path="grievance" element={<GrievancePage />} />
         <Route path="booking" element={<BookingPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

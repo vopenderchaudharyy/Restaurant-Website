@@ -218,10 +218,20 @@ export default function SiteLayout() {
               Platform dashboard <ArrowUpRight size={12} />
             </Link>
           </div>
+          <div>
+            <h4>Trust &amp; support</h4>
+            <Link to="/legal">Legal centre</Link>
+            <Link to="/privacy">Privacy</Link>
+            <Link to="/cancellation-refunds">Cancellations &amp; refunds</Link>
+            <Link to="/delivery-policy">Delivery policy</Link>
+            <Link to="/grievance">Grievance redressal</Link>
+          </div>
         </div>
         <div className="footer-bottom container">
           <span>© {new Date().getFullYear()} MenuMate. Made with a little extra love.</span>
           <span>
+            <Link to="/terms">Terms</Link>
+            <Link to="/privacy">Privacy</Link>
             <Camera size={15} />
             <Heart size={15} /> Stay hungry. Stay curious.
           </span>
