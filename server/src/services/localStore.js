@@ -10,7 +10,13 @@ const directory = process.env.MENUMATE_DATA_DIR
   : fileURLToPath(new URL('../../.data/', import.meta.url));
 const filename = join(directory, 'store.json');
 const lockfile = join(directory, 'store.lock');
-const empty = () => ({ users: {}, sessions: {}, records: {}, availability: {} });
+const empty = () => ({
+  users: {},
+  sessions: {},
+  passwordResets: {},
+  records: {},
+  availability: {},
+});
 let testStore = empty();
 let queue = Promise.resolve();
 
@@ -20,6 +26,7 @@ async function load() {
     const data = JSON.parse(await readFile(filename, 'utf8'));
     if (!data.users || !data.sessions || !data.records || !data.availability)
       throw new Error('Invalid store');
+    data.passwordResets ||= {};
     return data;
   } catch (error) {
     if (error.code === 'ENOENT') return empty();

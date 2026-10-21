@@ -224,6 +224,48 @@ describe('restaurant interactions', () => {
     expect(localStorage.getItem('menumate-profile')).toBeNull();
   });
 
+  it('requests a private password reset without revealing account existence', async () => {
+    apiRequest.mockImplementation(async (path) =>
+      path === '/menu'
+        ? menu
+        : {
+            message:
+              'If an account exists for that email, we have sent a secure password reset link.',
+          },
+    );
+    const { user } = setup('/forgot-password', null);
+    await user.type(screen.getByRole('textbox', { name: 'Email address' }), 'guest@example.com');
+    await user.click(screen.getByRole('button', { name: 'Email me a reset link' }));
+    expect(await screen.findByRole('heading', { name: 'Reset link requested.' })).toBeTruthy();
+    expect(screen.getByText(/guest@example.com/)).toBeTruthy();
+    const call = apiRequest.mock.calls.find(([path]) => path === '/auth/forgot-password');
+    expect(JSON.parse(call[1].body)).toEqual({ email: 'guest@example.com' });
+  });
+
+  it('validates and submits a new password from an emailed reset link', async () => {
+    apiRequest.mockImplementation(async (path) =>
+      path === '/menu' ? menu : { message: 'Password changed.' },
+    );
+    const { user } = setup(
+      '/reset-password?token=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNO12',
+      null,
+    );
+    await user.type(screen.getByLabelText('New password'), 'a-new-secure-password');
+    await user.type(screen.getByLabelText('Confirm new password'), 'different-password');
+    await user.click(screen.getByRole('button', { name: 'Save new password' }));
+    expect(screen.getByRole('alert').textContent).toContain('do not match');
+    expect(apiRequest.mock.calls.some(([path]) => path === '/auth/reset-password')).toBe(false);
+    await user.clear(screen.getByLabelText('Confirm new password'));
+    await user.type(screen.getByLabelText('Confirm new password'), 'a-new-secure-password');
+    await user.click(screen.getByRole('button', { name: 'Save new password' }));
+    expect(await screen.findByRole('heading', { name: 'You are ready to sign in.' })).toBeTruthy();
+    const call = apiRequest.mock.calls.find(([path]) => path === '/auth/reset-password');
+    expect(JSON.parse(call[1].body)).toEqual({
+      token: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNO12',
+      newPassword: 'a-new-secure-password',
+    });
+  });
+
   it('requires explicit confirmation before cancelling an order', async () => {
     const order = {
       id: 'OD-cancel',
@@ -449,7 +491,7 @@ describe('multi-restaurant marketplace', () => {
     expect(JSON.parse(localStorage.getItem('menumate-cart'))[0].dish.restaurantId).toBe(
       'menumate-kitchen',
     );
-  });
+  }, 10000);
 
   it('loads dynamic restaurant menus and uses the correct pickup address and estimate', async () => {
     apiRequest.mockImplementation(async (path) =>

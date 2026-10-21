@@ -82,7 +82,14 @@ export default function AuthPage({ register = false }) {
             />
           </label>
           <label className="field-label">
-            Password
+            <span className="auth-label-row">
+              Password
+              {!register && (
+                <Link to={`/forgot-password?next=${encodeURIComponent(next)}`}>
+                  Forgot password?
+                </Link>
+              )}
+            </span>
             <div className="password-field">
               <input
                 name="password"

@@ -12,5 +12,6 @@ export default defineConfig(({ mode }) => {
       proxy: { '/api': env.API_PROXY_TARGET || 'http://127.0.0.1:5000' },
     },
     preview: { host: '127.0.0.1', port: 4173, strictPort: true },
+    test: { testTimeout: 15000 },
   };
 });

@@ -164,6 +164,57 @@ test('login rejects invalid credentials, restores an account, and logout invalid
   await request('/auth/logout', { cookie, method: 'POST' });
   assert.equal((await request('/orders', { cookie })).status, 401);
 });
+test('password recovery is private, single-use, and revokes existing sessions', async () => {
+  const account = await register();
+  const unknownResponse = await request('/auth/forgot-password', {
+    cookie: null,
+    body: { email: `missing-${randomUUID()}@example.com` },
+  });
+  const knownResponse = await request('/auth/forgot-password', {
+    cookie: null,
+    body: { email: account.user.email.toUpperCase() },
+  });
+  assert.equal(unknownResponse.status, 200);
+  assert.equal(knownResponse.status, 200);
+  const unknown = await unknownResponse.json();
+  const known = await knownResponse.json();
+  assert.equal(known.message, unknown.message);
+  assert.equal(unknown.resetToken, undefined);
+  assert.match(known.resetToken, /^[A-Za-z0-9_-]{40,80}$/);
+
+  const newPassword = `${secret}-recovered`;
+  const changed = await request('/auth/reset-password', {
+    cookie: null,
+    body: { token: known.resetToken, newPassword },
+  });
+  assert.equal(changed.status, 200);
+  assert.equal((await changed.json()).message, 'Password changed. Sign in with your new password.');
+  assert.equal((await request('/orders', { cookie: account.cookie })).status, 401);
+  assert.equal(
+    (
+      await request('/auth/login', {
+        cookie: null,
+        body: { email: account.user.email, password: secret },
+      })
+    ).status,
+    401,
+  );
+  assert.equal(
+    (
+      await request('/auth/login', {
+        cookie: null,
+        body: { email: account.user.email, password: newPassword },
+      })
+    ).status,
+    200,
+  );
+  const reused = await request('/auth/reset-password', {
+    cookie: null,
+    body: { token: known.resetToken, newPassword: `${newPassword}-again` },
+  });
+  assert.equal(reused.status, 400);
+  assert.match((await reused.json()).message, /invalid or has expired/i);
+});
 test('password change rejects wrong current password and revokes older sessions', async () => {
   const first = await register();
   const login = await request('/auth/login', {

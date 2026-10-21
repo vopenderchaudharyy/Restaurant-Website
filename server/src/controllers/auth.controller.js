@@ -12,6 +12,13 @@ import {
   updateUser,
 } from '../services/accounts.js';
 import { cookieName, cookieOptions } from '../middleware/auth.js';
+import {
+  clearPasswordResets,
+  consumePasswordReset,
+  issuePasswordReset,
+} from '../services/passwordResets.js';
+import { sendPasswordResetEmail } from '../services/email.js';
+import { env } from '../config/env.js';
 
 function email(value) {
   const result = requiredText(value, 'email address', 200).toLowerCase();
@@ -89,4 +96,57 @@ export async function changePassword(req, res) {
   if (!updated) fail('Your account changed. Please sign in again.', 409);
   await revokeSessions(user.id);
   await signIn(req, res, updated);
+}
+
+const recoveryMessage =
+  'If an account exists for that email, we have sent a secure password reset link.';
+
+export async function requestPasswordReset(req, res) {
+  if (env.nodeEnv !== 'test' && (!env.resendApiKey || !env.emailFrom))
+    fail('Password recovery email is temporarily unavailable. Please try again later.', 503);
+  const startedAt = Date.now();
+  let address = '';
+  if (typeof req.body?.email === 'string')
+    address = req.body.email.trim().toLowerCase().slice(0, 200);
+  const validAddress = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address);
+  const user = validAddress ? await findUser({ email: address }) : null;
+  let testToken;
+  if (user) {
+    const token = await issuePasswordReset(user.id);
+    if (env.nodeEnv === 'test') {
+      await sendPasswordResetEmail(user, token);
+      testToken = token;
+    } else {
+      void sendPasswordResetEmail(user, token).catch(async (error) => {
+        console.error('Password reset email failed:', error.message);
+        try {
+          await clearPasswordResets(user.id);
+        } catch (cleanupError) {
+          console.error('Password reset cleanup failed:', cleanupError.message);
+        }
+      });
+    }
+  }
+  const remaining = 250 - (Date.now() - startedAt);
+  if (remaining > 0) await new Promise((resolve) => setTimeout(resolve, remaining));
+  res.json({ message: recoveryMessage, ...(testToken ? { resetToken: testToken } : {}) });
+}
+
+export async function resetPassword(req, res) {
+  const token = typeof req.body?.token === 'string' ? req.body.token.trim() : '';
+  if (!/^[A-Za-z0-9_-]{40,80}$/.test(token))
+    fail('This reset link is invalid or has expired. Request a new one.', 400);
+  const passwordHash = await hashPassword(password(req.body?.newPassword));
+  const reset = await consumePasswordReset(token);
+  if (!reset) fail('This reset link is invalid or has expired. Request a new one.', 400);
+  const user = await findUser({ id: reset.userId });
+  if (!user) fail('This reset link is invalid or has expired. Request a new one.', 400);
+  const updated = await updateUser(
+    user.id,
+    { passwordHash, authVersion: user.authVersion + 1 },
+    user.authVersion,
+  );
+  if (!updated) fail('Your account changed. Request a new reset link.', 409);
+  await Promise.all([revokeSessions(user.id), clearPasswordResets(user.id)]);
+  res.json({ message: 'Password changed. Sign in with your new password.' });
 }

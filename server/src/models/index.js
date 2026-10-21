@@ -5,6 +5,7 @@ import Session from './Session.js';
 import MenuAvailability from './MenuAvailability.js';
 import { recordModels } from './Record.js';
 import PaymentAttempt from './PaymentAttempt.js';
+import PasswordReset from './PasswordReset.js';
 export const databaseModels = [
   User,
   Session,
@@ -12,5 +13,6 @@ export const databaseModels = [
   Restaurant,
   MenuItem,
   PaymentAttempt,
+  PasswordReset,
   ...recordModels,
 ];

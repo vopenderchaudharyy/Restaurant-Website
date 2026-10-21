@@ -40,6 +40,8 @@ import {
   logout,
   profile,
   changePassword,
+  requestPasswordReset,
+  resetPassword,
 } from '../controllers/auth.controller.js';
 import {
   adminOrders,
@@ -99,6 +101,8 @@ router.post('/messages', createMessage);
 const authLimit = rateLimit();
 router.post('/auth/register', authLimit, register);
 router.post('/auth/login', authLimit, login);
+router.post('/auth/forgot-password', rateLimit({ limit: 5 }), requestPasswordReset);
+router.post('/auth/reset-password', rateLimit({ limit: 20 }), resetPassword);
 router.get('/auth/me', me);
 router.post('/auth/logout', logout);
 router.patch('/auth/profile', requireAuth, profile);

@@ -83,7 +83,7 @@ MONGODB_DB_NAME=restuarantwebsite
 ```
 
 `restuarantwebsite` is the **database** name (retaining the supplied spelling).
-It contains `users`, `sessions`, `orders`, `reservations`, `messages`, and
+It contains `users`, `sessions`, `password_resets`, `orders`, `reservations`, `messages`, and
 `menu_availability`, `restaurants`, and `menu_items`. Required unique and expiry indexes are initialized before the API
 starts accepting requests. In MongoDB Compass, connect to the URI above and open this database.
 Production sets `MONGODB_DB_NAME` explicitly so an Atlas URI without a database path cannot silently
@@ -143,9 +143,11 @@ local data directory as the API.
 
 Sessions expire after seven days and use HttpOnly cookies (Secure in production).
 Passwords use salted scrypt hashes; raw passwords and session tokens are not stored.
-Changing a password requires the current password and revokes other sessions. Mutation
-requests use an origin check and custom request header; authentication endpoints are
-rate limited per IP. Password recovery and email verification are not implemented.
+Changing a password requires the current password and revokes other sessions. Forgotten-password
+recovery sends a one-time 30-minute email link, stores only its SHA-256 hash, and revokes every
+existing session after a successful reset. Recovery responses do not reveal whether an email is
+registered. Mutation requests use an origin check and custom request header; authentication
+endpoints are rate limited per IP. New-account email verification is not implemented.
 
 ## Implemented screens and flows
 
@@ -164,6 +166,7 @@ rate limited per IP. Password recovery and email verification are not implemente
   details, confirmation, and a demo `.ics` calendar download for confirmed bookings.
 - `/about`, `/contact`: marketplace story, sample support details, and a demo message form.
 - `/login`, `/register`: customer authentication and return to the requested page.
+- `/forgot-password`, `/reset-password`: private email recovery and new-password confirmation.
 - `/account`, `/account/security`: saved name/phone and password changes.
 - `/account/orders`, `/account/reservations`, `/account/favorites`: private history,
   reorder, cancellation, and browser-local favourites.
@@ -217,8 +220,9 @@ Browser visual/focus checks still require manual review because no browser surfa
 
 Razorpay test checkout and verified full test refunds are integrated. Without test keys, only
 the simulated development checkout is available. Live keys are rejected; neither checkout
-charges real money. Restaurant capacity, real courier/GPS
-tracking, email delivery, and password recovery are not integrated. Demo order, reservation,
+charges real money. Restaurant capacity and real courier/GPS tracking are not integrated.
+Transactional password-recovery email uses
+Resend when its production credentials and verified sender are configured. Demo order, reservation,
 and contact submissions remain disabled when `NODE_ENV=production` until real operations
 are connected. Authentication and owner authorization are implemented.
 
@@ -311,14 +315,17 @@ Configure the API with:
 
 ```text
 API: CLIENT_ORIGIN=https://menumateweb.netlify.app
+API: PUBLIC_APP_URL=https://menumateweb.netlify.app
 API: MONGODB_URI=<your MongoDB Atlas URI>
+API: RESEND_API_KEY=<server-side Resend key>
+API: EMAIL_FROM=MenuMate <accounts@your-verified-domain.example>
 API: NODE_ENV=production
 API: HOST=0.0.0.0
 ```
 
 The same-origin proxy preserves the current cookie-authentication and CSRF model. The API must
 allow the exact Netlify origin, use HTTPS, and retain uploaded images on persistent storage. Set
-`VITE_STATIC_DEMO=false` after the proxy is live and verified. Never put MongoDB or Razorpay secrets
+`VITE_STATIC_DEMO=false` after the proxy is live and verified. Never put MongoDB, Resend, or Razorpay secrets
 in `VITE_` variables because those values are public browser code.
 
 ### Render API
@@ -327,6 +334,11 @@ The root `render.yaml` defines a free Node web service for the Express API. It i
 workspace dependencies, starts `server/src/server.js`, binds to Render on `0.0.0.0`, and checks
 `/api/health`. Create the service from the repository Blueprint and enter the MongoDB Atlas URI when
 Render prompts for `MONGODB_URI`; do not commit that URI.
+
+For password recovery, verify a sending domain in Resend and set the Render secrets
+`RESEND_API_KEY` and `EMAIL_FROM`. `EMAIL_FROM` must use the verified domain. The health response
+reports `email: configured` without exposing either value. Keep both values server-side; the
+frontend never needs an email-provider secret.
 
 The deployed API is available at `https://menumate-api.onrender.com`; Netlify's `/api/*` rewrite is
 placed before the SPA fallback and `VITE_STATIC_DEMO=false`. Render's free filesystem is temporary,

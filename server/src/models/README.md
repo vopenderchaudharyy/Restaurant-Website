@@ -2,6 +2,7 @@
 
 - `User.js`: customer/owner identity, salted password hash, and session revocation version.
 - `Session.js`: hashed session token, account reference/version, and expiry with a MongoDB TTL index.
+- `PasswordReset.js`: single-use hashed recovery token with an account index and 30-minute TTL.
 - `Restaurant.js`: one workspace per owner, listing status, city, delivery settings and availability.
 - `MenuItem.js`: restaurant-owned dishes, prices, images and availability.
 - `MenuAvailability.js`: persisted overrides in `menu_availability` for the shared menu catalog.

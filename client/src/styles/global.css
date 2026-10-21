@@ -4372,6 +4372,64 @@ td small {
   line-height: 1.6;
   text-align: center;
 }
+.auth-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.auth-label-row > a,
+.recovery-back,
+.recovery-result .text-button {
+  color: var(--orange);
+  font-size: 11px;
+  font-weight: 700;
+}
+.recovery-page {
+  min-height: 540px;
+}
+.recovery-image:after {
+  background: linear-gradient(0deg, #122a20f2, #122a2055);
+}
+.recovery-result {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.recovery-result > p {
+  margin: 0 0 24px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.recovery-result .button {
+  margin-top: 4px;
+}
+.recovery-result .text-button {
+  align-self: center;
+  margin-top: 18px;
+}
+.recovery-icon {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  margin-bottom: 22px;
+  border-radius: 50%;
+  color: var(--orange);
+  background: #fff0e8;
+}
+.recovery-icon.success {
+  color: #3f753d;
+  background: #edf5e7;
+}
+.recovery-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 22px;
+}
 .account-logout {
   display: flex;
   align-items: center;

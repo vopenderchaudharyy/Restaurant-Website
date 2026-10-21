@@ -17,6 +17,7 @@ import ReservationConfirmationPage from './pages/ReservationConfirmationPage.jsx
 import AccountPage from './pages/AccountPage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
 import AuthPage from './pages/AuthPage.jsx';
+import { ForgotPasswordPage, ResetPasswordPage } from './pages/PasswordRecoveryPage.jsx';
 import RequireAccount from './components/RequireAccount.jsx';
 
 export default function App() {
@@ -48,6 +49,8 @@ export default function App() {
         <Route path="cart" element={<CartPage />} />
         <Route path="login" element={<AuthPage key="login" />} />
         <Route path="register" element={<AuthPage key="register" register />} />
+        <Route path="forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="reset-password" element={<ResetPasswordPage />} />
         <Route
           path="checkout"
           element={

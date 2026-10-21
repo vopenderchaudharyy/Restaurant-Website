@@ -17,6 +17,14 @@ if (mongodbMigrateFrom && !/^[A-Za-z0-9_-]{1,64}$/.test(mongodbMigrateFrom)) {
     'MONGODB_MIGRATE_FROM must contain only letters, numbers, underscores or hyphens',
   );
 }
+const publicAppUrl =
+  process.env.PUBLIC_APP_URL?.trim() || process.env.CLIENT_ORIGIN || 'http://127.0.0.1:5173';
+try {
+  const parsed = new URL(publicAppUrl);
+  if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error();
+} catch {
+  throw new Error('PUBLIC_APP_URL must be a valid HTTP or HTTPS URL');
+}
 
 export const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
@@ -26,6 +34,9 @@ export const env = {
   mongodbUri: process.env.MONGODB_URI?.trim() || '',
   mongodbDbName,
   mongodbMigrateFrom,
+  publicAppUrl,
+  resendApiKey: process.env.RESEND_API_KEY?.trim() || '',
+  emailFrom: process.env.EMAIL_FROM?.trim() || '',
   razorpayKeyId: process.env.RAZORPAY_KEY_ID?.trim() || '',
   razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET?.trim() || '',
   razorpayWebhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET?.trim() || '',
