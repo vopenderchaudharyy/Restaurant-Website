@@ -248,7 +248,7 @@ export default function RestaurantSetup({ restaurant, onSaved }) {
                   value={form.phone}
                   onChange={update}
                   placeholder="e.g. +91 98765 43210"
-                  pattern="[+0-9 \(\)\-]{7,20}"
+                  pattern="(?:[0-9+ ]|\(|\)|-){7,20}"
                   maxLength={20}
                   autoComplete="tel"
                   required

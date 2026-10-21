@@ -117,7 +117,7 @@ export default function BookingPage() {
                   type="tel"
                   name="phone"
                   required
-                  pattern="[+0-9 ()\-]{7,20}"
+                  pattern="(?:[0-9+ ]|\(|\)|-){7,20}"
                   maxLength={20}
                   autoComplete="tel"
                   value={form.phone}

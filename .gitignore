@@ -11,3 +11,5 @@ server/.data/
 .tools/
 server/.mongodb/
 server/.uploads/
+playwright-report/
+test-results/

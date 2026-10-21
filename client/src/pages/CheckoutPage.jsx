@@ -81,7 +81,7 @@ export default function CheckoutPage() {
                 name="phone"
                 type="tel"
                 autoComplete="tel"
-                pattern="[+0-9 ()\-]{7,20}"
+                pattern="(?:[0-9+ ]|\(|\)|-){7,20}"
                 maxLength={20}
                 value={checkout.phone}
                 onChange={update}
