@@ -17,7 +17,11 @@ import {
   consumePasswordReset,
   issuePasswordReset,
 } from '../services/passwordResets.js';
-import { sendPasswordResetEmail } from '../services/email.js';
+import {
+  sendAdminLoginNotification,
+  sendPasswordResetEmail,
+  sendWelcomeEmail,
+} from '../services/email.js';
 import { env } from '../config/env.js';
 
 function email(value) {
@@ -35,6 +39,9 @@ async function signIn(req, res, user) {
   res.cookie(cookieName(), await createSession(user), cookieOptions());
   res.json({ user: publicUser(user) });
 }
+function sendInBackground(label, operation) {
+  void operation.catch((error) => console.error(`${label} failed:`, error.message));
+}
 export async function register(req, res) {
   const body = req.body || {};
   const user = await createUser({
@@ -49,6 +56,7 @@ export async function register(req, res) {
   });
   res.status(201);
   await signIn(req, res, user);
+  sendInBackground('Welcome email', sendWelcomeEmail(user));
 }
 export async function login(req, res) {
   const address = email(req.body?.email);
@@ -59,6 +67,7 @@ export async function login(req, res) {
   if (!(await verifyPassword(secret, user?.passwordHash)))
     fail('Email or password is incorrect.', 401);
   await signIn(req, res, user);
+  sendInBackground('Admin login notification', sendAdminLoginNotification(user));
 }
 export function me(req, res) {
   res.set('Cache-Control', 'no-store');

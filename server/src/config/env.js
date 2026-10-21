@@ -25,6 +25,10 @@ try {
 } catch {
   throw new Error('PUBLIC_APP_URL must be a valid HTTP or HTTPS URL');
 }
+const adminNotificationEmail = process.env.ADMIN_NOTIFICATION_EMAIL?.trim().toLowerCase() || '';
+if (adminNotificationEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(adminNotificationEmail)) {
+  throw new Error('ADMIN_NOTIFICATION_EMAIL must be a valid email address');
+}
 
 export const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
@@ -37,6 +41,7 @@ export const env = {
   publicAppUrl,
   resendApiKey: process.env.RESEND_API_KEY?.trim() || '',
   emailFrom: process.env.EMAIL_FROM?.trim() || '',
+  adminNotificationEmail,
   razorpayKeyId: process.env.RAZORPAY_KEY_ID?.trim() || '',
   razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET?.trim() || '',
   razorpayWebhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET?.trim() || '',

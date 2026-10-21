@@ -27,3 +27,5 @@ services:
         sync: false
       - key: EMAIL_FROM
         sync: false
+      - key: ADMIN_NOTIFICATION_EMAIL
+        sync: false

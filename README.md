@@ -3,6 +3,8 @@
 Multi-restaurant marketplace organized as a MERN project: MongoDB, Express, React, and Node.js.
 The responsive React UI expands the supplied storyboard into a contemporary food experience: bold typography, warm neutral surfaces, orange and sage accents, locally hosted photography/fonts, and connected customer/owner workflows.
 The previous static website is preserved unchanged in `legacy/`.
+See [PROJECT_READINESS.md](PROJECT_READINESS.md) for launch blockers, beneficiaries, monetisation
+options and the recommended Satna pilot process.
 
 ## Requirements
 
@@ -143,6 +145,9 @@ local data directory as the API.
 
 Sessions expire after seven days and use HttpOnly cookies (Secure in production).
 Passwords use salted scrypt hashes; raw passwords and session tokens are not stored.
+Successful registration sends the customer a welcome email, and successful login can notify a
+configured platform-owner address. These asynchronous notifications never contain passwords or
+session tokens and do not block account access if the email provider is unavailable.
 Changing a password requires the current password and revokes other sessions. Forgotten-password
 recovery sends a one-time 30-minute email link, stores only its SHA-256 hash, and revokes every
 existing session after a successful reset. Recovery responses do not reveal whether an email is
@@ -319,6 +324,7 @@ API: PUBLIC_APP_URL=https://menumateweb.netlify.app
 API: MONGODB_URI=<your MongoDB Atlas URI>
 API: RESEND_API_KEY=<server-side Resend key>
 API: EMAIL_FROM=MenuMate <accounts@your-verified-domain.example>
+API: ADMIN_NOTIFICATION_EMAIL=<platform owner email>
 API: NODE_ENV=production
 API: HOST=0.0.0.0
 ```
@@ -335,10 +341,11 @@ workspace dependencies, starts `server/src/server.js`, binds to Render on `0.0.0
 `/api/health`. Create the service from the repository Blueprint and enter the MongoDB Atlas URI when
 Render prompts for `MONGODB_URI`; do not commit that URI.
 
-For password recovery, verify a sending domain in Resend and set the Render secrets
-`RESEND_API_KEY` and `EMAIL_FROM`. `EMAIL_FROM` must use the verified domain. The health response
-reports `email: configured` without exposing either value. Keep both values server-side; the
-frontend never needs an email-provider secret.
+For password recovery and welcome messages, verify a sending domain in Resend and set the Render
+secrets `RESEND_API_KEY` and `EMAIL_FROM`. `EMAIL_FROM` must use the verified domain. Set
+`ADMIN_NOTIFICATION_EMAIL` to the platform-owner inbox that should receive successful-login alerts.
+The health response reports `email` and `adminNotifications` configuration without exposing any
+value. Keep all three values server-side; the frontend never needs an email-provider secret.
 
 The deployed API is available at `https://menumate-api.onrender.com`; Netlify's `/api/*` rewrite is
 placed before the SPA fallback and `VITE_STATIC_DEMO=false`. Render's free filesystem is temporary,

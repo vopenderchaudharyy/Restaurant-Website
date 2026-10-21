@@ -9,6 +9,7 @@ process.env.NODE_ENV = 'test';
 process.env.RAZORPAY_KEY_ID = '';
 process.env.RAZORPAY_KEY_SECRET = '';
 process.env.RAZORPAY_WEBHOOK_SECRET = '';
+process.env.ADMIN_NOTIFICATION_EMAIL = 'owner@example.com';
 const uploadTestDirectory = await mkdtemp(join(tmpdir(), 'menumate-photos-test-'));
 // Match the default hidden storage folder so serving tests catch dotfile regressions.
 process.env.MENUMATE_UPLOAD_DIR = join(uploadTestDirectory, '.uploads');
@@ -28,6 +29,7 @@ const { default: app } = await import('../src/app.js');
 const { findUser, updateUser } = await import('../src/services/accounts.js');
 const { rateLimit } = await import('../src/middleware/rateLimit.js');
 const { env } = await import('../src/config/env.js');
+const { clearTestEmailOutbox, readTestEmailOutbox } = await import('../src/services/email.js');
 let server, baseUrl, customer, other, admin;
 const secret = 'a-strong-test-passphrase-42';
 async function request(
@@ -142,6 +144,28 @@ test('registration hashes passwords, ignores role injection and sets an HTTP-onl
     ).status,
     400,
   );
+});
+test('registration welcomes the user and successful login notifies the platform owner', async () => {
+  clearTestEmailOutbox();
+  const address = `${randomUUID()}@example.com`;
+  await register(address);
+  let messages = readTestEmailOutbox();
+  assert.equal(messages.length, 1);
+  assert.equal(messages[0].to, address);
+  assert.equal(messages[0].subject, 'Welcome to MenuMate');
+  assert.doesNotMatch(JSON.stringify(messages[0]), new RegExp(secret));
+
+  clearTestEmailOutbox();
+  const response = await request('/auth/login', {
+    cookie: null,
+    body: { email: address, password: secret },
+  });
+  assert.equal(response.status, 200);
+  messages = readTestEmailOutbox();
+  assert.equal(messages.length, 1);
+  assert.equal(messages[0].to, 'owner@example.com');
+  assert.match(messages[0].subject, new RegExp(address));
+  assert.doesNotMatch(JSON.stringify(messages[0]), new RegExp(secret));
 });
 test('login rejects invalid credentials, restores an account, and logout invalidates the session', async () => {
   const result = await register();
