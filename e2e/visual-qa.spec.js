@@ -106,6 +106,17 @@ async function expectHealthyLayout(page) {
   expect(brokenImages, `broken images: ${brokenImages.join(', ')}`).toEqual([]);
 }
 
+async function loadLazyImages(page) {
+  await page.locator('img[loading="lazy"]').evaluateAll((images) => {
+    images.forEach((image) => {
+      image.loading = 'eager';
+    });
+  });
+  await page.waitForFunction(() =>
+    [...document.images].every((image) => image.complete && image.naturalWidth > 0),
+  );
+}
+
 async function capture(page, testInfo, name, { fullPage = true } = {}) {
   await page.screenshot({
     path: testInfo.outputPath('visual-qa', `${testInfo.project.name}-${name}.png`),
@@ -127,7 +138,9 @@ test('public surfaces remain clean and usable', async ({ page }, testInfo) => {
   for (const [path, heading, level] of routes) {
     await page.goto(path);
     await expect(page.getByRole('heading', { level, name: heading })).toBeVisible();
+    if (path === '/menu') await loadLazyImages(page);
     await expectHealthyLayout(page);
+    if (path === '/menu') await capture(page, testInfo, 'menu-catalog');
   }
 
   await capture(page, testInfo, 'legal-centre');

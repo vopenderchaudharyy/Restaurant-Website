@@ -412,7 +412,7 @@ const sampleDishes = {
   ],
 };
 export const additionalDemoDishes = Object.entries(sampleDishes).flatMap(([restaurantId, dishes]) =>
-  dishes.map(([slug, name, category, price, veg, photo, description]) => ({
+  dishes.map(([slug, name, category, price, veg, , description]) => ({
     id: `demo-${slug}`,
     restaurantId,
     name,
@@ -420,7 +420,7 @@ export const additionalDemoDishes = Object.entries(sampleDishes).flatMap(([resta
     price,
     veg,
     description,
-    image: photo === 'bowl' ? '/images/food-1.png' : `/images/design/${photo}.jpg`,
+    image: `/images/menu/${slug}.webp`,
     tag: '',
     demo: true,
     samplePhoto: true,
